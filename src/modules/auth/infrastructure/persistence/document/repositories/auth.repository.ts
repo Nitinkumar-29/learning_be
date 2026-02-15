@@ -1,13 +1,13 @@
-import { error } from "console";
-import { loginDto, registerDto } from "../../../../dto/auth.dto";
-import { User } from "../../../../schemas/user.schema";
+import { LoginDto, RegisterDto } from "../types/auth.types";
+import { User } from "../schemas/user.schema";
 import { AuthRepository } from "../auth.repository";
+import { IUser } from "../interfaces/user.interface";
 
 export class AuthDocumentRepository extends AuthRepository {
   constructor() {
     super();
   }
-  async login(loginDto: loginDto): Promise<unknown> {
+  async login(loginDto: LoginDto): Promise<unknown> {
     try {
       console.log("Login method called", loginDto);
       const user = await User.findOne({ email: loginDto.email });
@@ -24,7 +24,8 @@ export class AuthDocumentRepository extends AuthRepository {
     }
   }
 
-  async register(registerDto: registerDto): Promise<unknown> {
+
+  async register(registerDto: RegisterDto): Promise<unknown> {
     try {
       const user = await User.create({
         email: registerDto.email,
@@ -32,7 +33,26 @@ export class AuthDocumentRepository extends AuthRepository {
         mobileNumber: registerDto.mobileNumber,
         role: registerDto.role || "user",
       });
-      console.log("User created:", user);
+      return user;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async findByEmail(email: string): Promise<IUser | null> {
+    try {
+      console.log("findByEmail called with email:", email);
+      const user = await User.findOne({ email });
+      console.log("findByEmail result:", user);
+      return user;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async findById(id: string): Promise<unknown> {
+    try {
+      const user = await User.findById(id);
       return user;
     } catch (error) {
       throw error;
