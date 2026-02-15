@@ -3,6 +3,7 @@ import cors from "cors";
 import { authRouter } from "./src/routes/auth.route";
 import { connectToMongoDB } from "./db/mongodb.connection";
 import { errorHandler } from "./src/common/middleware/error.middleware";
+require("dotenv").config();
 
 const app = express();
 
