@@ -10,20 +10,20 @@ const bcrypt = require("bcryptjs");
 export class AuthService {
   constructor(private readonly authRepository: AuthRepository) {}
 
-  async login(loginDto: LoginDto) {
+  async login(loginDto: LoginDto): Promise<{ userData: any; token: string }> {
     const user = await this.authRepository.findByEmail(loginDto.email);
-    console.log("User found:", user);
+
     if (!user) {
-      throw new HttpError(400, "Invalid credentials");
+      throw new HttpError(401, "Invalid credentials");
     }
 
     const isPasswordValid = await bcrypt.compare(
-      loginDto.password,
+      loginDto.password.trim(),
       user.password,
     );
 
     if (!isPasswordValid) {
-      throw new HttpError(401, "Invalid email or password");
+      throw new HttpError(401, "Invalid credentials");
     }
 
     const token = generateToken({
@@ -33,24 +33,17 @@ export class AuthService {
     });
 
     return {
-      id: user._id,
-      email: user.email,
-      role: user.role,
+      userData: user,
       token,
     };
   }
 
   async registerUser(registerDto: RegisterDto) {
-    try {
-      const hashPassword = bcrypt.hash(registerDto.password, 10);
-      const result = await this.authRepository.register({
-        ...registerDto,
-        password: hashPassword,
-      });
-      console.log("Hashed Password:", hashPassword);
-      return result;
-    } catch (error: any) {
-      throw error;
-    }
+    const hashPassword = await bcrypt.hash(registerDto.password, 10);
+
+    return this.authRepository.createUser({
+      ...registerDto,
+      password: hashPassword,
+    });
   }
 }
