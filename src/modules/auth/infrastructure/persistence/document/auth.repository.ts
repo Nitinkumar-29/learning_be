@@ -8,4 +8,9 @@ export abstract class AuthRepository {
   ): Omit<IUser, "password"> | Promise<IUserResponse>;
   abstract findByEmail(email: string): Promise<IUser | null>;
   abstract findById(id: string): Promise<IUser | null>;
+  abstract updateUser(
+    id: string,
+    updateData: Partial<unknown>,
+  ): Promise<IUser | null>;
+  abstract findOne(filter: any): Promise<IUser | null>;
 }

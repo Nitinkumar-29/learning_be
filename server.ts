@@ -1,11 +1,10 @@
+require("dotenv").config();
 import express, { Request, Response } from "express";
 import cors from "cors";
 import { authRouter } from "./src/routes/auth.route";
 import { connectToMongoDB } from "./db/mongodb.connection";
 import { errorHandler } from "./src/common/middleware/error.middleware";
-import morgan from "morgan";
 import { requestLogger } from "./src/common/middleware/requestLogger";
-require("dotenv").config();
 
 const app = express();
 

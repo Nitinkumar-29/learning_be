@@ -62,6 +62,10 @@ const userSchema = new Schema(
       default: null,
       select: false, // 🔥 hide by default
     },
+    tokenVersion: {
+      default: 0,
+      type: Number,
+    },
   },
   {
     timestamps: true,
@@ -71,12 +75,12 @@ const userSchema = new Schema(
 
 // 🔥 Proper toJSON transform
 userSchema.set("toJSON", {
-  transform: (_doc, ret:any) => {
+  transform: (_doc, ret: any) => {
     delete ret.password;
     delete ret.passwordResetToken;
     delete ret.passwordResetExpires;
     return ret;
   },
-});
+}); // 🔥 TTL index for auto-deletion of expired reset tokens
 
 export const User = model("User", userSchema);

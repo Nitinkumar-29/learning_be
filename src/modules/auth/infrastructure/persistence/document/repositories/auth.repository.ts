@@ -18,6 +18,19 @@ export class AuthDocumentRepository extends AuthRepository {
   }
 
   async findById(id: string): Promise<IUser | null> {
-    return await User.findById(id);
+    return await User.findById(id).select("+password");
+  }
+
+  async updateUser(
+    id: string,
+    updateData: Partial<IUser>,
+  ): Promise<IUser | null> {
+    return await User.findByIdAndUpdate(id, updateData, { new: true });
+  }
+
+  async findOne(filter: any): Promise<IUser | null> {
+    return await User.findOne(filter).select(
+      "+password +passwordResetToken +passwordResetExpires +tokenVersion",
+    );
   }
 }

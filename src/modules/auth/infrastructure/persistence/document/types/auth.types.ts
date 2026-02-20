@@ -58,6 +58,7 @@ export interface IUser {
   isActive: boolean;
   companyName: string;
   name: string;
+  tokenVersion: number;
   updatedAt: Date;
   createdAt: Date;
 }
