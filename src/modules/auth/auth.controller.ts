@@ -19,6 +19,8 @@ export class AuthController {
     this.changePassword = this.changePassword.bind(this);
     this.forgotPassword = this.forgotPassword.bind(this);
     this.resetPassword = this.resetPassword.bind(this);
+    this.logout = this.logout.bind(this);
+    this.fetchUsers = this.fetchUsers.bind(this);
   }
 
   async login(req: any, res: any, next: any) {
@@ -57,7 +59,11 @@ export class AuthController {
     try {
       const userId = req?.user?.id as any;
       const user = await this.authService.getProfile(userId);
-      res.json(user);
+      res.json({
+        success: true,
+        message: "User profile fetched successfully",
+        user,
+      });
     } catch (error) {
       next(error);
     }
@@ -101,6 +107,39 @@ export class AuthController {
       res.status(200).json({
         message: "Password reset successfully",
         success: true,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async logout(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req?.user?.id as any;
+      await this.authService.logout(userId);
+      res.status(200).json({
+        message: "User logged out successfully",
+        success: true,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async fetchUsers(req: Request, res: Response, next: NextFunction) {
+    try {
+      const query = {
+        page: req.query.page || 1,
+        limit: req.query.limit || 10,
+        search: req.query.search as string | undefined,
+        startDate: req.query.startDate as Date | undefined,
+        endDate: req.query.endDate as Date | undefined,
+      };
+      const users = await this.authService.fetchUsers(query);
+      res.json({
+        messsage: "Users fetched successfully",
+        success: true,
+        result:users,
       });
     } catch (error) {
       next(error);

@@ -1,20 +1,17 @@
 import { HttpError } from "../../../common/errors/http.error";
 import { EmailProvider } from "../email.provider";
 import { SendEmailOptions } from "../types/email.types";
+import { env } from "../../../config/env";
 const nodemailer = require("nodemailer");
 
 export class NodemailerProvider implements EmailProvider {
   private transporter;
   constructor() {
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      throw new HttpError(500, "Email credentials not configured properly");
-    }
-
     this.transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+        user: env.email.user,
+        pass: env.email.pass,
       },
     });
   }
@@ -22,7 +19,7 @@ export class NodemailerProvider implements EmailProvider {
   async sendMail(options: SendEmailOptions): Promise<void> {
     try {
       return await this.transporter.sendMail({
-        from: process.env.EMAIL_USER,
+        from: env.email.user,
         to: options.to,
         subject: options.subject,
         html: options.html,

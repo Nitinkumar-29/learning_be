@@ -81,6 +81,6 @@ userSchema.set("toJSON", {
     delete ret.passwordResetExpires;
     return ret;
   },
-}); // 🔥 TTL index for auto-deletion of expired reset tokens
+});
 
 export const User = model("User", userSchema);

@@ -13,4 +13,6 @@ export abstract class AuthRepository {
     updateData: Partial<unknown>,
   ): Promise<IUser | null>;
   abstract findOne(filter: any): Promise<IUser | null>;
+  abstract findMany(filter: any): Promise<IUser[]>;
+  abstract totalUsers(): Promise<number>;
 }

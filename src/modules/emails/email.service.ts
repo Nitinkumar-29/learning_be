@@ -10,9 +10,6 @@ export class EmailService {
     requestOriginUrl: string,
   ) {
     try {
-      if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-        throw new Error("Email credentials not configured");
-      }
       const resetLink = `${requestOriginUrl}/reset-password?email=${email}&token=${resetToken}`;
       const html = resetPasswordTemplate(resetLink);
       await this.emailProvider.sendMail({

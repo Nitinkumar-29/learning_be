@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { HttpError } from "../errors/http.error";
+import { env } from "../../config/env";
 
-const isDev = process.env.NODE_ENV === "development";
+const isDev = env.app.nodeEnv === "development";
 
 export const errorHandler = (
   err: any,
@@ -55,6 +56,6 @@ export const errorHandler = (
   return res.status(statusCode).json({
     success: false,
     message,
-    ...(isDev && { stack: err.stack }) // show stack only in dev
+    // ...(isDev && { stack: err.stack }) // show stack only in dev
   });
 };

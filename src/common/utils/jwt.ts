@@ -1,8 +1,9 @@
 // common/utils/jwt.ts
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
+import { env } from "../../config/env";
 
-const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
+const JWT_SECRET = env.auth.jwtSecret;
 
 export const generateToken = (payload: object, options?: any) => {
   return jwt.sign(payload, JWT_SECRET, options);

@@ -134,7 +134,7 @@ export class AuthService {
     if (isPasswordMatchToOldOne) {
       throw new HttpError(
         400,
-        "Please provide a different password, you cannot reuse the current password",
+        "Please provide a different password, you cannot reuse the old password",
       );
     }
 
@@ -148,5 +148,45 @@ export class AuthService {
     });
 
     return { message: "Password reset successful" };
+  }
+
+  async logout(userId: string) {
+    const user = await this.authRepository.findById(userId.toString());
+    if (!user) {
+      throw new HttpError(404, "User not found");
+    }
+
+    return await this.authRepository.updateUser(userId.toString(), {
+      tokenVersion: user.tokenVersion + 1,
+    });
+  }
+
+  async fetchUsers(query: {
+    page: unknown;
+    limit: unknown;
+    search?: string;
+    startDate?: Date;
+    endDate?: Date;
+  }) {
+    const page = parseInt(query.page as string) || 1;
+    const limit = parseInt(query.limit as string) || 10;
+    const search = query.search;
+    const users = await this.authRepository.findMany({
+      page: query.page,
+      limit: query.limit,
+      search,
+    });
+    let totalUsers;
+
+    totalUsers = await this.authRepository.totalUsers();
+
+    return {
+      users,
+      pagination: {
+        totalPages: Math.ceil(totalUsers / limit),
+        currentPage: page,
+        totalUsers,
+      },
+    };
   }
 }
