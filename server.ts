@@ -7,6 +7,7 @@ import { connectToMongoDB } from "./src/config/db/mongodb.connection";
 import { errorHandler } from "./src/common/middleware/error.middleware";
 import { requestLogger } from "./src/common/middleware/requestLogger";
 import { env } from "./src/config/env";
+import { walletRouter } from "./src/routes/wallet.route";
 
 const app = express();
 
@@ -31,6 +32,7 @@ const startServer = async () => {
   app.use("/auth", authRouter);
   app.use("/kyc", kycRouter);
   app.use("/storage", storageRouter);
+  app.use("/wallet", walletRouter)
 
   // error handling middleware should be the last middleware
   app.use(errorHandler);
