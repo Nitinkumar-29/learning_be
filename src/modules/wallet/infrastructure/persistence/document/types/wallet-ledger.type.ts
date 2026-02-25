@@ -1,4 +1,9 @@
 import { z } from "zod";
+import {
+  referenceType,
+  transactionStatus,
+  transactionType,
+} from "../../../../../../common/enums/wallet-ledger.enum";
 
 const objectIdSchema = z
   .string()
@@ -8,14 +13,12 @@ const objectIdSchema = z
 export const createWalletLedgerSchema = z.object({
   walletId: objectIdSchema,
   userId: objectIdSchema,
-  transactionType: z.enum([
-    "credit",
-    "hold",
-    "debit",
-    "release",
-    "refund",
-    "adjustment",
-  ]),
+  // walletOperationType: z.enum(Object.values(walletOperationType)),
+  transactionType: z.enum(Object.values(transactionType)),
+  transactionStatus: z
+    .enum(Object.values(transactionStatus))
+    .optional()
+    .default(transactionStatus.PENDING),
   amount: z
     .number("Amount must be a number")
     .positive("Amount must be greater than 0"),
@@ -34,7 +37,7 @@ export const createWalletLedgerSchema = z.object({
     .min(0, "Hold after transaction cannot be negative"),
   description: z.string().trim().optional(),
   referenceId: z.string().trim().optional(),
-  referenceType: z.string().trim().optional(),
+  referenceType: z.enum(Object.values(referenceType)),
   provider: z.string().trim().optional(),
   providerReferenceId: z.string().trim().optional(),
   idempotencyKey: z.string().trim().min(1, "Idempotency key is required"),

@@ -1,6 +1,9 @@
 import { NextFunction, Request, Response } from "express";
 import { WalletService } from "./services/wallet.service";
-import { CreateWalletDto } from "./infrastructure/persistence/document/types/wallet.type";
+import {
+  CreateWalletDto,
+  UpdateWalletDto,
+} from "./infrastructure/persistence/document/types/wallet.type";
 
 export class WalletController {
   constructor(private walletService: WalletService) {
@@ -14,7 +17,6 @@ export class WalletController {
   async createWallet(req: Request, res: Response, next: NextFunction) {
     try {
       const walletPayload = req.body as CreateWalletDto;
-      console.log(walletPayload, "walletPayload");
       const userId = req.user?.id as unknown as string;
       const wallet = await this.walletService.createWallet(
         userId!,
@@ -48,13 +50,11 @@ export class WalletController {
   //   update wallet details for a user
   async updateWallet(req: Request, res: Response, next: NextFunction) {
     try {
-      const walletPayload = req.body as CreateWalletDto;
+      const walletPayload = req.body as UpdateWalletDto;
       const userId = req.user?.id as unknown as string;
-      const walletId = req.params.id as unknown as string;
-      console.log(walletId, "walletPayload");
+
       const wallet = await this.walletService.updateWallet({
         userId,
-        walletId,
         walletData: walletPayload,
       });
       res.status(200).json({

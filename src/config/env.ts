@@ -48,4 +48,7 @@ export const env = {
     apiKey: getRequiredEnv("CLOUDINARY_API_KEY"),
     apiSecret: getRequiredEnv("CLOUDINARY_API_SECRET"),
   },
+  redis: {
+    url: process.env.REDIS_URL || "redis://localhost:6379",
+  }
 };

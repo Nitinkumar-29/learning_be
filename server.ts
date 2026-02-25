@@ -8,11 +8,17 @@ import { errorHandler } from "./src/common/middleware/error.middleware";
 import { requestLogger } from "./src/common/middleware/requestLogger";
 import { env } from "./src/config/env";
 import { walletRouter } from "./src/routes/wallet.route";
+import { orderRouter } from "./src/routes/order.route";
+import redisClient from "./src/config/redis.config";
+import { queuesRouter } from "./src/routes/queues.route";
 
 const app = express();
 
 const startServer = async () => {
   await connectToMongoDB();
+  // await redisClient.connect();
+  await redisClient.ping()
+  
   app.use(express.json());
   app.use(requestLogger);
   app.use(
@@ -33,6 +39,8 @@ const startServer = async () => {
   app.use("/kyc", kycRouter);
   app.use("/storage", storageRouter);
   app.use("/wallet", walletRouter)
+  app.use("/orders", orderRouter);
+  app.use("/", queuesRouter);
 
   // error handling middleware should be the last middleware
   app.use(errorHandler);

@@ -3,21 +3,24 @@ const router = express.Router();
 import { walletModule } from "../modules/wallet/wallet.module";
 import { authModule } from "../modules/auth/auth.module";
 import { validate } from "../common/validator";
-import { createWalletSchema } from "../modules/wallet/infrastructure/persistence/document/types/wallet.type";
+import {
+  createWalletSchema,
+  updateWalletSchema,
+} from "../modules/wallet/infrastructure/persistence/document/types/wallet.type";
 const { walletController } = walletModule;
 const { authMiddleware } = authModule;
 
 router.post(
   "/create",
-  validate(createWalletSchema),
   authMiddleware.protect,
+  validate(createWalletSchema),
   walletController.createWallet,
 );
 router.get("/details", authMiddleware.protect, walletController.getWallet);
 router.put(
-  "/update/:id",
-  validate(createWalletSchema),
+  "/update",
   authMiddleware.protect,
+  validate(updateWalletSchema),
   walletController.updateWallet,
 );
 
