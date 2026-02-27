@@ -1,7 +1,7 @@
 import { RegisterDto } from "../types/auth.types";
 import { IUserResponse } from "../dto/user-response.dto";
 import { User } from "../schemas/user.schema";
-import { AuthRepository } from "../auth.repository";
+import { AuthRepository } from "../../abstraction/auth.repository";
 import { IUser } from "../types/auth.types";
 
 export class AuthDocumentRepository extends AuthRepository {

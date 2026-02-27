@@ -13,21 +13,33 @@ const orderItemSchema = z.object({
   category: z.string().trim().optional(),
   quantity: z.number().int().positive("Item quantity must be greater than 0"),
   unitPrice: z.number().nonnegative("Item unitPrice cannot be negative"),
-  taxPercent: z.number().nonnegative("Item taxPercent cannot be negative").optional(),
+  taxPercent: z
+    .number()
+    .nonnegative("Item taxPercent cannot be negative")
+    .optional(),
 });
 
 const consigneeSchema = z.object({
   name: z.string().trim().min(2, "Consignee name is required"),
   email: z.email("Invalid consignee email format").optional(),
-  mobile: z.string().trim().regex(/^\d{10}$/, "Consignee mobile must be 10 digits"),
+  mobile: z
+    .string()
+    .trim()
+    .regex(/^\d{10}$/, "Consignee mobile must be 10 digits"),
   phone: z.string().trim().optional(),
-  pincode: z.string().trim().regex(/^\d{6}$/, "Consignee pincode must be 6 digits"),
+  pincode: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/, "Consignee pincode must be 6 digits"),
   address1: z.string().trim().min(5, "Consignee address1 is required"),
   address2: z.string().trim().optional(),
   city: z.string().trim().min(2, "Consignee city is required"),
   state: z.string().trim().min(2, "Consignee state is required"),
   country: z.string().trim().optional().default("India"),
-  addressType: z.enum(Object.values(addressType)).optional().default(addressType.OTHER),
+  addressType: z
+    .enum(Object.values(addressType))
+    .optional()
+    .default(addressType.OTHER),
 });
 
 const shipmentArraySchema = z
@@ -50,8 +62,16 @@ export const createOrderSchema = z
     items: z.array(orderItemSchema).min(1, "At least one item is required"),
     charges: z.object({
       orderAmount: z.number().nonnegative("orderAmount cannot be negative"),
-      codAmount: z.number().nonnegative("codAmount cannot be negative").optional().default(0),
-      taxAmount: z.number().nonnegative("taxAmount cannot be negative").optional().default(0),
+      codAmount: z
+        .number()
+        .nonnegative("codAmount cannot be negative")
+        .optional()
+        .default(0),
+      taxAmount: z
+        .number()
+        .nonnegative("taxAmount cannot be negative")
+        .optional()
+        .default(0),
       extraCharges: z
         .number()
         .nonnegative("extraCharges cannot be negative")
@@ -63,7 +83,12 @@ export const createOrderSchema = z
       height: shipmentArraySchema,
       length: shipmentArraySchema,
       weight: shipmentArraySchema,
-      mps: z.number().int().nonnegative("mps cannot be negative").optional().default(0),
+      mps: z
+        .number()
+        .int()
+        .nonnegative("mps cannot be negative")
+        .optional()
+        .default(0),
     }),
   })
   .superRefine((data, ctx) => {
@@ -136,4 +161,10 @@ export interface IOrder {
   parcelxResponseRefId?: Types.ObjectId | null;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface OrderCancellationRequestDto {
+  orderId: string;
+  reason: string;
+  clientOrderId?: string;
 }

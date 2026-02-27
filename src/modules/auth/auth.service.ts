@@ -4,7 +4,7 @@ import {
   LoginDto,
   RegisterDto,
 } from "./infrastructure/persistence/document/types/auth.types";
-import { AuthRepository } from "./infrastructure/persistence/document/auth.repository";
+import { AuthRepository } from "./infrastructure/persistence/abstraction/auth.repository";
 import { EmailService } from "../emails/email.service";
 const bcrypt = require("bcryptjs");
 import crypto from "crypto";

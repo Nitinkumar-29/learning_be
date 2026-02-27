@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { HttpError } from "../errors/http.error";
 import { verifyToken } from "../utils/jwt";
-import { AuthRepository } from "../../modules/auth/infrastructure/persistence/document/auth.repository";
+import { AuthRepository } from "../../modules/auth/infrastructure/persistence/abstraction/auth.repository";
 import { userRole } from "../enums/auth.enum";
 
 export class AuthMiddleware {

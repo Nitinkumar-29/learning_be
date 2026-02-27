@@ -10,8 +10,8 @@ const router = express.Router();
 
 const { authController, authMiddleware } = authModule;
 
-router.post("/login", validate(loginSchema), authController.login);
 router.post("/register", validate(registerSchema), authController.registerUser);
+router.post("/login", validate(loginSchema), authController.login);
 router.get("/profile", authMiddleware.protect, authController.getProfile);
 router.post(
   "/change-password",

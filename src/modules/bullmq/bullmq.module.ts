@@ -1,5 +1,8 @@
 import { Worker } from "bullmq";
-import { createParcelXOrderConsumer } from "../parcelx/queues/order/order.consumer";
+import {
+  parcelXOrderConsumer,
+  parcelXOrderCancellationConsumer,
+} from "../parcelx/queues/order/order.consumer";
 
 let workers: Worker[] = [];
 
@@ -8,7 +11,7 @@ export const initializeBullWorkers = (): Worker[] => {
     return workers;
   }
 
-  workers = [createParcelXOrderConsumer()];
+  workers = [parcelXOrderConsumer(), parcelXOrderCancellationConsumer()];
   return workers;
 };
 

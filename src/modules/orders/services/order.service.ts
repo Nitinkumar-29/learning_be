@@ -1,8 +1,11 @@
 import { orderStatus } from "../../../common/enums/order.enum";
 import { HttpError } from "../../../common/errors/http.error";
-import { CreateOrderDto } from "../infrastructure/persistence/document/types/order.type";
+import {
+  CreateOrderDto,
+  OrderCancellationRequestDto,
+} from "../infrastructure/persistence/document/types/order.type";
 import { OrderRepository } from "../infrastructure/persistence/abstraction/order.repository";
-import { parcelXOrderQueue } from "../../parcelx/queues/order/order.producer";
+import { parcelXOrderCancellationQueue, parcelXOrderQueue } from "../../parcelx/queues/order/order.producer";
 
 export class OrderService {
   constructor(private orderRepository: OrderRepository) {}
@@ -70,6 +73,33 @@ export class OrderService {
     return {
       order: createdOrder,
       idempotentReplay: false,
+    };
+  }
+
+  async cancelOrder(payload: OrderCancellationRequestDto) {
+    // to cancel the order i need to first get response from parcelx to confirm cnacellation thne update order details
+    const order = await this.orderRepository.findById(payload.orderId);
+    if (!order) {
+      throw new HttpError(404, "Order not found");
+    }
+    if (order.status === orderStatus.CANCELLED) {
+      throw new HttpError(400, "Order is already cancelled");
+    }
+    await parcelXOrderCancellationQueue.add("cancel-order", {
+      orderId: payload.orderId,
+      cancellationReason:payload.reason,
+      userId: order.userId,
+      clientOrderId: order.clientOrderId,
+    });
+    //  send response
+    return {
+      message: "Order cancellation request has been queued for processing",
+      success: true,
+      data: {
+        orderId: payload.orderId,
+        reason: payload.reason,
+        clientOrderId: payload.clientOrderId || null,
+      },
     };
   }
 

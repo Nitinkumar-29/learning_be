@@ -50,5 +50,10 @@ export const env = {
   },
   redis: {
     url: process.env.REDIS_URL || "redis://localhost:6379",
-  }
+  },
+  parcelX: {
+    accessKey: process.env.PARCEL_ACCESS_KEY || "",
+    secretKey: process.env.PARCEL_SECRET_KEY || "",
+    apiUrl: process.env.PARCELX_API_URL || "https://app.parcelx.in",
+  },
 };

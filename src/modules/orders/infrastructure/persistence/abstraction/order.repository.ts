@@ -21,7 +21,7 @@ export abstract class OrderRepository {
 
   abstract updateOne(
     orderId: string,
-    orderData: Record<string, unknown>,
+    orderData: object,
     session?: ClientSession,
   ): Promise<any>;
 }

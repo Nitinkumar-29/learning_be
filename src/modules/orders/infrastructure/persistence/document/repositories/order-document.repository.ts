@@ -38,7 +38,7 @@ export class OrderDocumentRepository extends OrderRepository {
     session?: ClientSession,
   ): Promise<any> {
     return await OrderModel.findByIdAndUpdate(orderId, orderData, {
-      new: true,
+      returnDocument: "after",
       session,
     });
   }

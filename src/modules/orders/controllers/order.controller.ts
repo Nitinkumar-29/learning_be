@@ -1,11 +1,15 @@
 import { NextFunction, Request, Response } from "express";
 import { OrderService } from "../services/order.service";
-import { CreateOrderDto } from "../infrastructure/persistence/document/types/order.type";
+import {
+  CreateOrderDto,
+  OrderCancellationRequestDto,
+} from "../infrastructure/persistence/document/types/order.type";
 
 export class OrderController {
   constructor(private orderService: OrderService) {
     this.orderService = orderService;
     this.createOrder = this.createOrder.bind(this);
+    this.cancelOrder = this.cancelOrder.bind(this);
   }
 
   // create order
@@ -32,6 +36,25 @@ export class OrderController {
           parcelxRequestRefId: order.parcelxRequestRefId,
           parcelxResponseRefId: order.parcelxResponseRefId,
         },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async cancelOrder(req: Request, res: Response, next: NextFunction) {
+    try {
+
+      const orderRequestCancellationPayload =
+        req.body as OrderCancellationRequestDto;
+
+      const result = await this.orderService.cancelOrder(
+        orderRequestCancellationPayload,
+      );
+      res.status(200).json({
+        message: "Order cancellation successful",
+        success: true,
+        data: result,
       });
     } catch (error) {
       next(error);

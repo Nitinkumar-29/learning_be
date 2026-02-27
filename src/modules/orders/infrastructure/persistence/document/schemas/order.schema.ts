@@ -118,7 +118,7 @@ const OrderSchema = new Schema(
     },
     requestSnapshot: { type: Schema.Types.Mixed, required: true },
   },
-  { timestamps: true },
+  { timestamps: true, strict: false },
 );
 
 OrderSchema.index(

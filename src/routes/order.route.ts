@@ -15,4 +15,10 @@ router.post(
   orderController.createOrder,
 );
 
+router.post(
+  "/cancel",
+  authMiddleware.protect,
+  orderController.cancelOrder,
+);
+
 export const orderRouter = router;

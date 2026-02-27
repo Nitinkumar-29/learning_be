@@ -1,3 +1,3 @@
 export abstract class ParcelXRepository {
-    abstract create(requestLog: any): Promise<void>;
+    abstract create(requestLog: any): Promise<any>;
 }

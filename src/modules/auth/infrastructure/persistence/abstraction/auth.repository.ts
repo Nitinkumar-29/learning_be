@@ -1,6 +1,6 @@
-import { LoginDto, RegisterDto } from "./types/auth.types";
-import { IUser } from "./types/auth.types";
-import { IUserResponse } from "./dto/user-response.dto";
+import { LoginDto, RegisterDto } from "../document/types/auth.types";
+import { IUser } from "../document/types/auth.types";
+import { IUserResponse } from "../document/dto/user-response.dto";
 
 export abstract class AuthRepository {
   abstract createUser(
