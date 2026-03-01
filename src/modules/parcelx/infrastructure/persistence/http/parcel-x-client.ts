@@ -49,18 +49,26 @@ export class ParcelXClient {
   }
 
   async orderCancellation(payload: any): Promise<any> {
-    return this.request({
-      url: "/api/v3/order/cancel_order",
-      method: "POST",
-      data: payload,
-    });
+     return {
+      statusCode: 200,
+      data: {
+        success: true,
+        message: "Mocked ParcelX order creation successful",
+        data: payload,
+      },
+    };
+    // return this.request({
+    //   url: "/api/v3/order/cancel_order",
+    //   method: "POST",
+    //   data: payload,
+    // });
   }
 
   async createWarehouse(
     payload: Record<string, unknown>,
   ): Promise<ParcelXApiResponse> {
     return this.request({
-      url: "/api/v1/warehouse/create",
+      url: "/api/v3/create_warehouse",
       method: "POST",
       data: payload,
     });

@@ -5,7 +5,13 @@ import { Types } from "mongoose";
 declare global {
   namespace Express {
     interface Request {
-      user?: { id: Types.ObjectId; [key: string]: any };
+      user?: {
+        id: Types.ObjectId;
+        [key: string]: any;
+        role: string;
+        tokenVersion: number;
+        email: string;
+      };
     }
   }
 }
@@ -139,7 +145,7 @@ export class AuthController {
       res.json({
         messsage: "Users fetched successfully",
         success: true,
-        result:users,
+        result: users,
       });
     } catch (error) {
       next(error);

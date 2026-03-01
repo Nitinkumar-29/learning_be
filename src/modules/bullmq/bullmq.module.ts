@@ -3,6 +3,7 @@ import {
   parcelXOrderConsumer,
   parcelXOrderCancellationConsumer,
 } from "../parcelx/queues/order/order.consumer";
+import { parcelXWarehouseConsumer } from "../parcelx/queues/warehouse/warehouse.consumer";
 
 let workers: Worker[] = [];
 
@@ -11,7 +12,11 @@ export const initializeBullWorkers = (): Worker[] => {
     return workers;
   }
 
-  workers = [parcelXOrderConsumer(), parcelXOrderCancellationConsumer()];
+  workers = [
+    parcelXOrderConsumer(),
+    parcelXOrderCancellationConsumer(),
+    parcelXWarehouseConsumer(),
+  ];
   return workers;
 };
 

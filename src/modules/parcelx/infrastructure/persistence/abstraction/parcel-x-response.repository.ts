@@ -1,3 +1,5 @@
+import { CreateParcelXResponseLogDto } from "../document/types/parcelx-log.types";
+
 export abstract class ParcelXResponseRepository {
-    abstract create(responseLog: any): Promise<any>;
+  abstract create(responseLog: CreateParcelXResponseLogDto): Promise<any>;
 }

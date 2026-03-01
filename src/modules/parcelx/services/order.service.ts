@@ -2,26 +2,16 @@ import { HttpError } from "../../../common/errors/http.error";
 import { orderStatus } from "../../../common/enums/order.enum";
 import { OrderRepository } from "../../orders/infrastructure/persistence/abstraction/order.repository";
 import { NonRetryableJobError } from "../errors/job.errors";
-import { ParcelXRepository } from "../infrastructure/persistence/abstraction/parcel-x-request.repository";
-import { ParcelXResponseRepository } from "../infrastructure/persistence/abstraction/parcel-x-response.repository";
 import { ParcelXClient } from "../infrastructure/persistence/http/parcel-x-client";
 import { mapOrderToParcelXOrderPayload } from "../mapper/parcel-x-order.mapper";
+import { ParcelXCommonService } from "./common.service";
 
 export class ParcelXOrderService {
   constructor(
-    private parcelXRequestRepository: ParcelXRepository,
-    private parcelXResponseRepository: ParcelXResponseRepository,
     private orderRepository: OrderRepository,
     private parcelXClient: ParcelXClient,
+    private parcelXCommonService: ParcelXCommonService,
   ) {}
-
-  async logRequest(requestLog: any): Promise<any> {
-    return await this.parcelXRequestRepository.create(requestLog);
-  }
-
-  async logResponse(responseLog: any): Promise<any> {
-    return await this.parcelXResponseRepository.create(responseLog);
-  }
 
   private buildErrorResponsePayload(error: any, fallbackMessage: string): any {
     try {
@@ -57,7 +47,7 @@ export class ParcelXOrderService {
       providerSyncStatus: "processing",
     });
 
-    const requestLog = await this.logRequest({
+    const requestLog = await this.parcelXCommonService.logRequest({
       provider: "parcelx",
       operation: "order",
       orderId: order._id,
@@ -68,7 +58,7 @@ export class ParcelXOrderService {
 
     try {
       const apiResponse = await this.parcelXClient.createOrder(parcelXPayload);
-      const responseLog = await this.logResponse({
+      const responseLog = await this.parcelXCommonService.logResponse({
         requestRefId: requestLog._id,
         provider: "parcelx",
         operation: "order",
@@ -91,7 +81,7 @@ export class ParcelXOrderService {
         "ParcelX order creation failed",
       );
 
-      const failedResponseLog = await this.logResponse({
+      const failedResponseLog = await this.parcelXCommonService.logResponse({
         requestRefId: requestLog._id,
         provider: "parcelx",
         operation: "order",
@@ -124,7 +114,7 @@ export class ParcelXOrderService {
       providerSyncStatus: "processing",
     });
 
-    const requestLog = await this.logRequest({
+    const requestLog = await this.parcelXCommonService.logRequest({
       provider: "parcelx",
       operation: "order",
       orderId,
@@ -134,14 +124,16 @@ export class ParcelXOrderService {
     });
 
     try {
-      const parcelXResponse = await this.parcelXClient.orderCancellation(orderId);
-      const responseLog = await this.logResponse({
+      const parcelXResponse =
+        await this.parcelXClient.orderCancellation(orderId);
+      const responseLog = await this.parcelXCommonService.logResponse({
         requestRefId: requestLog._id,
         provider: "parcelx",
         operation: "order",
         orderId,
         statusCode: parcelXResponse.statusCode,
-        success: parcelXResponse.statusCode >= 200 && parcelXResponse.statusCode < 300,
+        success:
+          parcelXResponse.statusCode >= 200 && parcelXResponse.statusCode < 300,
         responsePayload: parcelXResponse.data,
         receivedAt: new Date(),
       });
@@ -159,7 +151,7 @@ export class ParcelXOrderService {
         "ParcelX order cancellation failed",
       );
 
-      const failedResponseLog = await this.logResponse({
+      const failedResponseLog = await this.parcelXCommonService.logResponse({
         requestRefId: requestLog._id,
         provider: "parcelx",
         operation: "order",

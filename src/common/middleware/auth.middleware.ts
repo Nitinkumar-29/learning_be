@@ -33,12 +33,14 @@ export class AuthMiddleware {
       throw new HttpError(401, "Token invalidated");
     }
 
-    req.user = {
+    const authorizedUser = req.user = {
       id: user._id,
-      role: user.role,
+      role: decoded.role,
+      tokenVersion: user.tokenVersion,
+      email: user.email,
     };
 
-    return user;
+    return authorizedUser;
   };
 
   protect = async (req: Request, _res: Response, next: NextFunction) => {

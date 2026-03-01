@@ -11,6 +11,7 @@ import { walletRouter } from "./src/routes/wallet.route";
 import { orderRouter } from "./src/routes/order.route";
 import redisClient from "./src/config/redis.config";
 import { queuesRouter } from "./src/routes/queues.route";
+import { warehouseRoutes } from "./src/routes/warehouse.route";
 
 const app = express();
 
@@ -40,6 +41,7 @@ const startServer = async () => {
   app.use("/storage", storageRouter);
   app.use("/wallet", walletRouter)
   app.use("/orders", orderRouter);
+  app.use("/warehouse",warehouseRoutes)
   app.use("/", queuesRouter);
 
   // error handling middleware should be the last middleware

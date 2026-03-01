@@ -55,7 +55,9 @@ const resolvePaymentMode = (paymentMethod: string): "Prepaid" | "Cod" => {
   return paymentMethod === paymentMethods.COD ? "Cod" : "Prepaid";
 };
 
-export const mapOrderToParcelXOrderPayload = (order: CreateOrderDto): ParcelXOrderPayload => {
+export const mapOrderToParcelXOrderPayload = (
+  order: CreateOrderDto,
+): ParcelXOrderPayload => {
   return {
     client_order_id: order.clientOrderId || "",
     consignee_emailid: order.consignee?.email || "",

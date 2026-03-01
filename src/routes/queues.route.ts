@@ -6,6 +6,7 @@ import {
   parcelXOrderQueue,
   parcelXOrderCancellationQueue,
 } from "../modules/parcelx/queues/order/order.producer";
+import { ParcelXWarehouseQueue } from "../modules/parcelx/queues/warehouse/warehouse.producer";
 
 const router = express.Router();
 const serverAdapter = new ExpressAdapter();
@@ -16,6 +17,7 @@ createBullBoard({
   queues: [
     new BullMQAdapter(parcelXOrderQueue),
     new BullMQAdapter(parcelXOrderCancellationQueue),
+    new BullMQAdapter(ParcelXWarehouseQueue)
   ],
   serverAdapter,
 });

@@ -7,22 +7,7 @@ import {
   ParcelXOrderJobData,
 } from "./order.producer";
 import { parcelXModule } from "../../parcel.module";
-import { NonRetryableJobError } from "../../errors/job.errors";
-import { HttpError } from "../../../../common/errors/http.error";
-
-const handleJobError = (error: unknown): never => {
-  if (error instanceof NonRetryableJobError) {
-    throw new UnrecoverableError(
-      error.message || "Non-retryable error occurred while processing ParcelX job",
-    );
-  }
-
-  if (error instanceof HttpError && error.statusCode === 401) {
-    throw new UnrecoverableError("ParcelX auth failed (401)");
-  }
-
-  throw error;
-};
+import { handleJobError } from "../../../../common/errors/handle.job.errors";
 
 const processParcelXOrderJob = async (job: Job<ParcelXOrderJobData>) => {
   try {
