@@ -24,4 +24,4 @@ router.put(
   walletController.updateWallet,
 );
 
-export const walletRouter = router;
+export const walletRoutes = router;

@@ -21,4 +21,4 @@ router.post(
   orderController.cancelOrder,
 );
 
-export const orderRouter = router;
+export const orderRoutes = router;

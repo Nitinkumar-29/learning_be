@@ -49,7 +49,7 @@ export class ParcelXClient {
   }
 
   async orderCancellation(payload: any): Promise<any> {
-     return {
+    return {
       statusCode: 200,
       data: {
         success: true,
@@ -67,11 +67,19 @@ export class ParcelXClient {
   async createWarehouse(
     payload: Record<string, unknown>,
   ): Promise<ParcelXApiResponse> {
-    return this.request({
-      url: "/api/v3/create_warehouse",
-      method: "POST",
-      data: payload,
-    });
+    return {
+      statusCode: 200,
+      data: {
+        success: true,
+        message: "Mocked ParcelX warehouse creation successful",
+        data: payload,
+      },
+    };
+    // return this.request({
+    //   url: "/api/v3/create_warehouse",
+    //   method: "POST",
+    //   data: payload,
+    // });
   }
 
   async updateNdr(

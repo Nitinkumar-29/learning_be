@@ -46,4 +46,4 @@ router.delete(
   kycController.deleteKycDetails,
 );
 
-export const kycRouter = router;
+export const kycRoutes = router;

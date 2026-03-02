@@ -20,16 +20,30 @@ export class WarehouseDocumentRepository implements WarehouseRepository {
     return await warehouseModel.findById(warehouseId);
   }
 
-  async findMany(basicQuery: {
-    admin: boolean;
-    userId: Types.ObjectId;
+  async findMany({
+    basicQuery,
+    filters,
+  }: {
+    basicQuery: { admin: boolean; userId: string | Types.ObjectId };
+    filters: { page: number; limit: number };
   }): Promise<any> {
-    let result;
-    if (basicQuery.admin) {
-      result = await warehouseModel.find({});
-    } else {
-      result = await warehouseModel.find({ userId: basicQuery.userId });
-    }
-    return result;
+    const page = Math.max(1, Number(filters?.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(filters?.limit) || 10));
+    const skip = (page - 1) * limit;
+    const query = basicQuery.admin ? {} : { userId: basicQuery.userId };
+
+    return await warehouseModel
+      .find(query)
+      .sort({ createdAt: -1, _id: -1 })
+      .skip(skip)
+      .limit(limit);
+  }
+
+  async totalDocuments(basicQuery: {
+    admin: boolean;
+    userId: string | Types.ObjectId;
+  }): Promise<number> {
+    const query = basicQuery.admin ? {} : { userId: basicQuery.userId };
+    return await warehouseModel.countDocuments(query);
   }
 }

@@ -24,4 +24,4 @@ createBullBoard({
 
 router.use("/admin/queues", serverAdapter.getRouter());
 
-export const queuesRouter = router;
+export const queuesRoutes = router;

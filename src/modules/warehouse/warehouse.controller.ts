@@ -4,8 +4,8 @@ import { RegisterWarehouseDto } from "./infrastructure/persistence/document/type
 
 export class WarehouseController {
   constructor(private warehouseService: WarehouseService) {
-    this.warehouseService = warehouseService,
-    this.registerWarehouse = this.registerWarehouse.bind(this);
+    ((this.warehouseService = warehouseService),
+      (this.registerWarehouse = this.registerWarehouse.bind(this)));
     this.fetchWarehouses = this.fetchWarehouses.bind(this);
   }
 
@@ -36,12 +36,17 @@ export class WarehouseController {
   ): Promise<any> {
     try {
       const userId = req.user!.id;
-      const queryParams = req.query
+      const page = Math.max(1, Number(req.query.page) || 1);
+      const limit = Math.max(1, Number(req.query.limit) || 10);
+      const queryParams = {
+        page,
+        limit,
+      };
       const userRole = req.user!.role;
       const result = await this.warehouseService.getRelativeWarehousesData(
         userId,
         userRole,
-        queryParams
+        queryParams,
       );
       res.status(200).json({
         message: "Fetched warehouses data successfully!",

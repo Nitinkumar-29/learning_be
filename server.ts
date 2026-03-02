@@ -1,23 +1,22 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
-import { authRouter } from "./src/routes/auth.route";
-import { kycRouter } from "./src/routes/kyc.route";
-import { storageRouter } from "./src/routes/storage.route";
+import { authRoutes } from "./src/routes/auth.route";
+import { kycRoutes } from "./src/routes/kyc.route";
+import { storageRoutes } from "./src/routes/storage.route";
 import { connectToMongoDB } from "./src/config/db/mongodb.connection";
 import { errorHandler } from "./src/common/middleware/error.middleware";
 import { requestLogger } from "./src/common/middleware/requestLogger";
 import { env } from "./src/config/env";
-import { walletRouter } from "./src/routes/wallet.route";
-import { orderRouter } from "./src/routes/order.route";
+import { walletRoutes } from "./src/routes/wallet.route";
+import { orderRoutes } from "./src/routes/order.route";
 import redisClient from "./src/config/redis.config";
-import { queuesRouter } from "./src/routes/queues.route";
+import { queuesRoutes } from "./src/routes/queues.route";
 import { warehouseRoutes } from "./src/routes/warehouse.route";
 
 const app = express();
 
 const startServer = async () => {
   await connectToMongoDB();
-  // await redisClient.connect();
   await redisClient.ping()
   
   app.use(express.json());
@@ -36,13 +35,13 @@ const startServer = async () => {
     res.send("Hello World");
   });
 
-  app.use("/auth", authRouter);
-  app.use("/kyc", kycRouter);
-  app.use("/storage", storageRouter);
-  app.use("/wallet", walletRouter)
-  app.use("/orders", orderRouter);
+  app.use("/auth", authRoutes);
+  app.use("/kyc", kycRoutes);
+  app.use("/storage", storageRoutes);
+  app.use("/wallet", walletRoutes)
+  app.use("/orders", orderRoutes);
   app.use("/warehouse",warehouseRoutes)
-  app.use("/", queuesRouter);
+  app.use("/", queuesRoutes);
 
   // error handling middleware should be the last middleware
   app.use(errorHandler);

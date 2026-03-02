@@ -9,7 +9,7 @@
     "start": "node dist/server.js",
     "dev": "ts-node-dev --respawn --transpile-only server.ts",
     "worker": "ts-node-dev --respawn --transpile-only src/modules/bullmq/worker.ts",
-    "server worker": "concurrently \"npm run dev\" \"npm run worker\""
+    "dev:all": "concurrently \"npm run dev\" \"npm run worker\""
   },
   "keywords": [],
   "author": "",

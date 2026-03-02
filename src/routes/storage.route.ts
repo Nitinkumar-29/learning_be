@@ -36,4 +36,4 @@ router.post(
 );
 router.delete("/delete", authMiddleware.protect, storageController.deleteFile);
 
-export const storageRouter = router;
+export const storageRoutes = router;

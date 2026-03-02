@@ -20,13 +20,17 @@ export class WarehouseService {
     }
 
     const warehouseRegistrationPayload = mapWarehouseParcelXPayload(payload);
-    await ParcelXWarehouseQueue.add("warehouse-registration", {
-      warehouseId: result._id.toString(),
-      userId,
-      parcelXPayload: warehouseRegistrationPayload,
-    }, {
-      jobId: `${parcelXWarehouse}_${result._id.toString()}`,
-    });
+    await ParcelXWarehouseQueue.add(
+      "warehouse-registration",
+      {
+        warehouseId: result._id.toString(),
+        userId,
+        parcelXPayload: warehouseRegistrationPayload,
+      },
+      {
+        jobId: `${parcelXWarehouse}_${result._id.toString()}`,
+      },
+    );
 
     return result;
   }
@@ -35,24 +39,32 @@ export class WarehouseService {
   async getRelativeWarehousesData(
     userId: string | Types.ObjectId,
     role: string,
-    queryParams?: Object,
+    queryParams: { page: number; limit: number },
   ): Promise<any> {
-    // if role is admin fetch all warehouses
-    let basicQuery;
-    if (role === userRole.ADMIN) {
-      basicQuery = {
-        admin: true,
-        userId,
-      };
-    } else {
-      basicQuery = {
-        admin: false,
-        userId,
-      };
-    }
+    const page = Math.max(1, Number(queryParams.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(queryParams.limit) || 10));
+    const basicQuery = {
+      admin: role === userRole.ADMIN,
+      userId,
+    };
 
-    // fetch data now
-    const results = await this.warehouseRepository.findMany(basicQuery);
-    return results;
+    const items = await this.warehouseRepository.findMany({
+      basicQuery,
+      filters: { page, limit },
+    });
+    const total = await this.warehouseRepository.totalDocuments(basicQuery);
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+
+    return {
+      items,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+      },
+    };
   }
 }

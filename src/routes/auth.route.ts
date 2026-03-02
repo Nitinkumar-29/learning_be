@@ -27,4 +27,4 @@ router.get(
   authController.fetchUsers,
 );
 
-export const authRouter = router;
+export const authRoutes = router;
