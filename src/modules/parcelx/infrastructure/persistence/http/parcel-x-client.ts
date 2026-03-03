@@ -82,6 +82,17 @@ export class ParcelXClient {
     // });
   }
 
+  async removeWarehouse(warehouseId: string): Promise<any> {
+    return {
+      statusCode: 200,
+      data: {
+        success: true,
+        message: "Mocked ParcelX warehouse removal successful",
+        data:warehouseId
+      },
+    };
+  }
+
   async updateNdr(
     payload: Record<string, unknown>,
   ): Promise<ParcelXApiResponse> {

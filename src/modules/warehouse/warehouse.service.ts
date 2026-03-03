@@ -1,4 +1,5 @@
 import { Types } from "mongoose";
+import { randomUUID } from "crypto";
 import { WarehouseRepository } from "./infrastructure/persistence/abstraction/warehouse.repository";
 import { RegisterWarehouseDto } from "./infrastructure/persistence/document/types/warehouse.types";
 import { userRole } from "../../common/enums/auth.enum";
@@ -8,6 +9,10 @@ import {
   ParcelXWarehouseQueue,
 } from "../parcelx/queues/warehouse/warehouse.producer";
 import { mapWarehouseParcelXPayload } from "../parcelx/mapper/parcel-x-warehouse.mapper";
+import {
+  warehouseJobTypeEnums,
+  warehouseStatusType,
+} from "../../common/enums/warehouse.enum";
 
 export class WarehouseService {
   constructor(private warehouseRepository: WarehouseRepository) {}
@@ -23,9 +28,10 @@ export class WarehouseService {
     await ParcelXWarehouseQueue.add(
       "warehouse-registration",
       {
+        type: warehouseJobTypeEnums.REGISTER_WAREHOUSE,
         warehouseId: result._id.toString(),
-        userId,
         parcelXPayload: warehouseRegistrationPayload,
+        userId,
       },
       {
         jobId: `${parcelXWarehouse}_${result._id.toString()}`,
@@ -66,5 +72,50 @@ export class WarehouseService {
         hasPrev: page > 1,
       },
     };
+  }
+
+  // remove warehouse
+  async removeWarehouse(warehouseId: string): Promise<any> {
+    // check whether warehouseId exists or not
+    const warehouse = await this.warehouseRepository.findById(warehouseId);
+    if (!warehouse) {
+      throw new HttpError(
+        404,
+        `Warehouse with this ${warehouseId} id doesn't exists in our system`,
+      );
+    }
+    if (warehouse.status === warehouseStatusType.INACTIVE) {
+      throw new HttpError(
+        409,
+        `Warehouse with this ${warehouseId} id already inactivated!`,
+      );
+    }
+    const currentStatus = warehouse.status ?? warehouseStatusType.PENDING;
+    const opId = `warehouse-removal-${warehouseId}-${randomUUID()}`;
+    // update warehouse
+    const updated = await this.warehouseRepository.updateOne(warehouseId, {
+      status: warehouseStatusType.REMOVAL_PENDING,
+      previousStatus: currentStatus,
+      opId,
+    });
+    try {
+      //  add to queue to process on parcel
+      await ParcelXWarehouseQueue.add("remove-warehouse", {
+        type: warehouseJobTypeEnums.REMOVE_WAREHOUSE,
+        warehouseId: warehouseId,
+        previousStatus: currentStatus,
+        userId: warehouse.userId.toString(),
+        opId,
+      });
+    } catch (error) {
+      await this.warehouseRepository.updateOne(warehouseId, {
+        status: currentStatus,
+        previousStatus: null,
+        opId: null,
+      });
+      throw error;
+    }
+    // return response
+    return updated;
   }
 }

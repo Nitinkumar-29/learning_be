@@ -1,4 +1,6 @@
-import { z } from "zod";import { warehouseStatusType } from "../../../../../../common/enums/warehouse.enum";
+import { z } from "zod";
+import { Types } from "mongoose";
+import { warehouseStatusType } from "../../../../../../common/enums/warehouse.enum";
 
 export const registerWarehouseSchema = z.object({
   businessName: z
@@ -38,3 +40,21 @@ export const registerWarehouseSchema = z.object({
 export const registerWarehouseDto = registerWarehouseSchema;
 export type RegisterWarehouseDto = z.infer<typeof registerWarehouseSchema>;
 
+export interface IWarehouse {
+  _id: Types.ObjectId;
+  userId: Types.ObjectId;
+  businessName: string;
+  senderName: string;
+  fullAddress: string;
+  addressTitle: string;
+  phone: string;
+  pinCode: string;
+  city: string;
+  state: string;
+  status?: warehouseStatusType | null;
+  parcelXStatus?: warehouseStatusType | null;
+  previousStatus?: warehouseStatusType | null;
+  opId?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}

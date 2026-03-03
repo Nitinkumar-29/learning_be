@@ -12,13 +12,14 @@ import { orderRoutes } from "./src/routes/order.route";
 import redisClient from "./src/config/redis.config";
 import { queuesRoutes } from "./src/routes/queues.route";
 import { warehouseRoutes } from "./src/routes/warehouse.route";
+import { paymentRoutes } from "./src/routes/payments.route";
 
 const app = express();
 
 const startServer = async () => {
   await connectToMongoDB();
-  await redisClient.ping()
-  
+  await redisClient.ping();
+
   app.use(express.json());
   app.use(requestLogger);
   app.use(
@@ -38,9 +39,10 @@ const startServer = async () => {
   app.use("/auth", authRoutes);
   app.use("/kyc", kycRoutes);
   app.use("/storage", storageRoutes);
-  app.use("/wallet", walletRoutes)
+  app.use("/wallet", walletRoutes);
   app.use("/orders", orderRoutes);
-  app.use("/warehouse",warehouseRoutes)
+  app.use("/warehouse", warehouseRoutes);
+  app.use("/payments", paymentRoutes);
   app.use("/", queuesRoutes);
 
   // error handling middleware should be the last middleware

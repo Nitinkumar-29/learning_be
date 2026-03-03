@@ -1,7 +1,8 @@
 import mongoose, { Schema } from "mongoose";
 import { warehouseStatusType } from "../../../../../../common/enums/warehouse.enum";
+import { IWarehouse } from "../types/warehouse.types";
 
-const WarehouseSchema = new Schema(
+const WarehouseSchema = new Schema<IWarehouse>(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -42,7 +43,10 @@ const WarehouseSchema = new Schema(
       enum: Object.values(warehouseStatusType),
     },
   },
-  { timestamps: true },
+  { timestamps: true, strict: false },
 );
 
-export const warehouseModel = mongoose.model("Warehouse", WarehouseSchema);
+export const warehouseModel = mongoose.model<IWarehouse>(
+  "Warehouse",
+  WarehouseSchema,
+);

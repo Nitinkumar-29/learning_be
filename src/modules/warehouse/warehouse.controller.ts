@@ -7,6 +7,7 @@ export class WarehouseController {
     ((this.warehouseService = warehouseService),
       (this.registerWarehouse = this.registerWarehouse.bind(this)));
     this.fetchWarehouses = this.fetchWarehouses.bind(this);
+    this.removeWarehouse = this.removeWarehouse.bind(this);
   }
 
   // register warehouse
@@ -52,6 +53,26 @@ export class WarehouseController {
         message: "Fetched warehouses data successfully!",
         success: true,
         data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // remove warehouse --> set to inactive
+  async removeWarehouse(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<any> {
+    try {
+      const { id } = req.params;
+      const warehouseId = Array.isArray(id) ? id[0] : id;
+      const response = await this.warehouseService.removeWarehouse(warehouseId);
+      res.status(200).json({
+        message: `Request initiated for warehouse ${warehouseId} removal.`,
+        success: true,
+        data: response,
       });
     } catch (error) {
       next(error);

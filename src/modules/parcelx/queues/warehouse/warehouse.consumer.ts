@@ -1,52 +1,10 @@
-import { Job, Worker } from "bullmq";
-import {
-  parcelXWarehouse,
-  ParcelXWarehouseJobData,
-} from "./warehouse.producer";
-import { parcelXModule } from "../../parcel.module";
+import { Worker } from "bullmq";
+import { parcelXWarehouse } from "./warehouse.producer";
 import redisClient from "../../../../config/redis.config";
-import { handleJobError } from "../../../../common/errors/handle.job.errors";
-
-// process job
-const processParcelXWarehouseJob = async (
-  job: Job<ParcelXWarehouseJobData>,
-) => {
-  try {
-    const { warehouseId } = job.data;
-    console.log(`Processing parcelx warehouse creation job ${warehouseId}`);
-    const result =
-      await parcelXModule.parcelXWarehouseService.registerParcelXWarehouse(
-        job.data,
-      );
-    return {
-      warehouseId,
-      success: true,
-      message: `ParcelX warehouse processing completed for warehouseId: ${warehouseId}`,
-      parcelX: result,
-    };
-  } catch (error: any) {
-    let parsedMessage: unknown = error?.message;
-    if (typeof error?.message === "string") {
-      try {
-        parsedMessage = JSON.parse(error.message);
-      } catch {
-        parsedMessage = error.message;
-      }
-    }
-
-    console.error(
-      JSON.stringify({
-        warehouseId: job.data.warehouseId,
-        message: "Error processing ParcelX warehouse job",
-        errorName: error?.name ?? null,
-        statusCode: error?.statusCode ?? null,
-        error: parsedMessage,
-        stack: error?.stack ?? null,
-      }),
-    );
-    handleJobError(error);
-  }
-};
+import {
+  ParcelXWarehouseJobData,
+  processParcelXWarehouseJob,
+} from "./warehouse.job";
 
 export const parcelXWarehouseConsumer = () => {
   const worker = new Worker<ParcelXWarehouseJobData>(

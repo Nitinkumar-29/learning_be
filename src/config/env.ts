@@ -56,4 +56,10 @@ export const env = {
     secretKey: process.env.PARCEL_SECRET_KEY || "",
     apiUrl: process.env.PARCELX_API_URL || "https://app.parcelx.in",
   },
+  paymentProvider: {
+    type: process.env.PAYMENT_PROVIDER_TYPE,
+    paymentProviderKeyId: process.env.RAZORPAY_KEY_ID,
+    paymentProviderKeySecret: process.env.RAZORPAY_KEY_SECRET,
+    paymentProviderWebhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET,
+  },
 };

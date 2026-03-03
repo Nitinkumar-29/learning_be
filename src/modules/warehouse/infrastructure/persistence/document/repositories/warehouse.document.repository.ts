@@ -1,22 +1,30 @@
 import { Types } from "mongoose";
 import { WarehouseRepository } from "../../abstraction/warehouse.repository";
 import { warehouseModel } from "../schemas/warehouse.schema";
+import { IWarehouse } from "../types/warehouse.types";
 
 export class WarehouseDocumentRepository implements WarehouseRepository {
-  async create(userId: string, warehousePayload: any): Promise<any> {
+  async create(
+    userId: string,
+    warehousePayload: Record<string, unknown>,
+  ): Promise<IWarehouse> {
     return await warehouseModel.create({ userId, ...warehousePayload });
   }
 
   async updateOne(
     warehouseId: string | Types.ObjectId,
     payload: Record<string, unknown>,
-  ): Promise<any> {
+  ): Promise<IWarehouse | null> {
     return await warehouseModel.findByIdAndUpdate(warehouseId, payload, {
       new: true,
     });
   }
 
-  async findById(warehouseId: string | Types.ObjectId): Promise<any> {
+  async findOne(id: string): Promise<IWarehouse | null> {
+    return await warehouseModel.findOne({ _id: id });
+  }
+
+  async findById(warehouseId: string | Types.ObjectId): Promise<IWarehouse | null> {
     return await warehouseModel.findById(warehouseId);
   }
 
@@ -26,7 +34,7 @@ export class WarehouseDocumentRepository implements WarehouseRepository {
   }: {
     basicQuery: { admin: boolean; userId: string | Types.ObjectId };
     filters: { page: number; limit: number };
-  }): Promise<any> {
+  }): Promise<IWarehouse[]> {
     const page = Math.max(1, Number(filters?.page) || 1);
     const limit = Math.min(100, Math.max(1, Number(filters?.limit) || 10));
     const skip = (page - 1) * limit;

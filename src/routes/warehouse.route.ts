@@ -20,4 +20,10 @@ router.get(
   warehouseController.fetchWarehouses,
 );
 
+router.post(
+  "/remove/:id",
+  authMiddleware.protect,
+  warehouseController.removeWarehouse,
+);
+
 export const warehouseRoutes = router;

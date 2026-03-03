@@ -10,7 +10,13 @@
         "skipLibCheck": true,
         "resolveJsonModule": true,
         "moduleResolution": "node",
-        "allowJs": false
+        "allowJs": false,
+        "typeRoots": [
+            "node_modules/@types"
+        ],
+        "types": [
+            "node"
+        ]
     },
     "include": [
         "**/*.ts"
