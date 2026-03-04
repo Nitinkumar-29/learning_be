@@ -21,7 +21,7 @@ const PaymentOrderSchema = new Schema(
       type: Number,
       required: true,
     },
-    paymentProvider: {
+    provider: {
       type: String,
       required: true,
       enum: Object.values(paymentProviderEnums),
@@ -63,9 +63,16 @@ const PaymentOrderSchema = new Schema(
       default: null,
       required: false,
     },
+    paymentCompletedAt: {
+      type: Date,
+      default: null,
+    },
   },
-  { timestamps: true, strict: false },
+  { timestamps: true },
 );
+
+PaymentOrderSchema.index({ providerOrderId: 1 });
+PaymentOrderSchema.index({ userId: 1, createdAt: -1 });
 
 export const PaymentOrderModel = mongoose.model(
   "PaymentOrder",

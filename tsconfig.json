@@ -20,7 +20,7 @@
     },
     "include": [
         "**/*.ts"
-    ],
+, "src/modules/payments/providers/razorpay/events/payment.capt"    ],
     "exclude": [
         "node_modules",
         "dist",

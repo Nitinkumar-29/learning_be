@@ -12,7 +12,7 @@ export const paymentOrderSchema = z.object({
     .number()
     .int({ message: "Amount must be an integer in paise" })
     .positive({ message: "Amount must be greater than 0" }),
-  paymentProvider: z.enum(Object.values(paymentProviderEnums), {
+  provider: z.enum(Object.values(paymentProviderEnums), {
     message: "Invalid provider",
   }),
   paymentMode: z.enum(Object.values(paymentModeEnums), {
@@ -29,7 +29,7 @@ export interface IPaymentOrder {
   userId: Types.ObjectId;
   refId: string;
   amountInPaise: number;
-  paymentProvider: paymentProviderEnums;
+  provider: paymentProviderEnums;
   paymentMode?: paymentModeEnums | null | undefined;
   orderStatus?: paymentOrderStatusEnums | null | undefined;
   orderDetails: Record<string, unknown> | null;

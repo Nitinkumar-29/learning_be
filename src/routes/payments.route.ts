@@ -14,4 +14,16 @@ router.post(
   paymentController.createOrder,
 );
 
+router.post(
+  "/webhook",
+  express.raw({ type: "application/json" }),
+  paymentController.prcoessWebhook,
+);
+
+router.post(
+  "/verify-payment",
+  authMiddleware.protect,
+  paymentController.verifyPayment,
+);
+
 export const paymentRoutes = router;

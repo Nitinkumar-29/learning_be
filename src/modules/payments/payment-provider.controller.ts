@@ -4,8 +4,10 @@ import { PaymentOrderDto } from "./infrastructure/persistence/document/types/pay
 
 export class PaymentGatewayController {
   constructor(private readonly paymentService: PaymentProviderService) {
-    ((this.paymentService = paymentService),
-      (this.createOrder = this.createOrder.bind(this)));
+    this.paymentService = paymentService;
+    this.createOrder = this.createOrder.bind(this);
+    this.prcoessWebhook = this.prcoessWebhook.bind(this);
+    this.verifyPayment = this.verifyPayment.bind(this);
   }
 
   // create order
@@ -28,6 +30,31 @@ export class PaymentGatewayController {
         success: true,
         data: paymentOrderResult,
       });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // webhook for provider to hit
+  async prcoessWebhook(req: Request, res: Response, next: NextFunction) {
+    try {
+      // process it
+      await this.paymentService.processWebhook(req);
+      res.json({ success: true });
+    } catch (error) {
+      res.json({ success: true });
+      next(error);
+    }
+  }
+
+  // verify-payment
+  async verifyPayment(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<any> {
+    try {
+      // verify-payment hit service
     } catch (error) {
       next(error);
     }

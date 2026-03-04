@@ -1,6 +1,6 @@
 import { paymentOrderStatusEnums } from "../../../../../../common/enums/payment-gateway.enum";
 import { PaymentOrderRepository } from "../../abstraction/payment-order.repository";
-import { PaymentOrderModel } from "../schemas/payment-order.schema";
+import { PaymentOrderModel } from "../schemas/order.schema";
 import { IPaymentOrder, PaymentOrderDto } from "../types/payment-order.types";
 
 export class PaymentOrderDocumentRepository implements PaymentOrderRepository {
