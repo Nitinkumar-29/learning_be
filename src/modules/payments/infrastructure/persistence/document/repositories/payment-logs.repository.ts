@@ -23,7 +23,7 @@ export class PaymentLogsDocumentRepository implements PaymentLogsRepository {
         $set: safePayload,
         $setOnInsert: { refId, operation },
       },
-      { new: true, upsert: true },
+      { returnDocument: "after", upsert: true },
     );
   }
   async fetchAll(query: any): Promise<any> {}

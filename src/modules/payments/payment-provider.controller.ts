@@ -42,7 +42,6 @@ export class PaymentGatewayController {
       await this.paymentService.processWebhook(req);
       res.json({ success: true });
     } catch (error) {
-      res.json({ success: true });
       next(error);
     }
   }

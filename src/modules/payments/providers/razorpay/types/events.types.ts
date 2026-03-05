@@ -1,10 +1,10 @@
-import { paymentEventEnums } from "../../../../../common/enums/payment-gateway.enum";
-
-export interface PaymentCapturedHandler {
-  providerOrderId: string;
-  paymentId: string;
-  amount: number;
-  currency: string;
-  status: paymentEventEnums;
-  rawPayload: object;
+export interface RazorpayWebhookEventResult {
+  eventState: "processed" | "ignored";
+  refId: string | null;
+  providerOrderId: string | null;
+  paymentId: string | null;
+  status: string | null;
+  amountInPaise: number | null;
+  currency: string | null;
+  rawPayload: unknown;
 }

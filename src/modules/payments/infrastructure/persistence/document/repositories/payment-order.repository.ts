@@ -22,7 +22,9 @@ export class PaymentOrderDocumentRepository implements PaymentOrderRepository {
     )) as unknown as IPaymentOrder;
   }
   async fetchAll(payload: any): Promise<any> {}
-  async findByGatewayOrderId(id: string): Promise<any> {}
+  async findByGatewayOrderId(id: string): Promise<any> {
+    return await PaymentOrderModel.findOne({ providerOrderId: id });
+  }
   async findById(payload: any): Promise<any> {}
   async findOne(payload: any): Promise<any> {}
   async updateOne({
@@ -34,13 +36,14 @@ export class PaymentOrderDocumentRepository implements PaymentOrderRepository {
       providerOrderId: string | null;
       orderDetails: any;
       orderStatus: paymentOrderStatusEnums;
+      paymentCompletedAt?: Date | null;
     };
   }): Promise<IPaymentOrder | null> {
     // find order by refid for uniquenes and then update details
     return await PaymentOrderModel.findOneAndUpdate(
       { refId },
       { ...payload },
-      { new: true },
+      { returnDocument: "after" },
     );
   }
 }

@@ -7,11 +7,13 @@ import {
   paymentLogStatusEnums,
   paymentOrderStatusEnums,
   paymentProviderEnums,
+  paymentTransactionStatusEnums,
 } from "../../../common/enums/payment-gateway.enum";
 import { PaymentProviderFactory } from "../factory/payment-provider.factory";
 import { PaymentOrderDto } from "../infrastructure/persistence/document/types/payment-order.types";
 import { PaymentProvider } from "../interfaces/payment-provider.interface";
 import { PaymentOrderRepository } from "../infrastructure/persistence/abstraction/payment-order.repository";
+import { PaymentTransactionRepository } from "../infrastructure/persistence/abstraction/payment-transaction.repository";
 import {
   CreateOrderRequestLogDto,
   CreateOrderResponseLogDto,
@@ -20,10 +22,17 @@ import {
   enqueuePaymentLogJob,
   paymentLogQueueJobs,
 } from "../queues/producers/payment-log.producer";
+import {
+  enqueuePaymentWebhookLogJob,
+  paymentWebhookLogQueueJobs,
+} from "../queues/producers/payment-webhook-log.producer";
+import { PaymentWebhookLogService } from "./payment-webhook-log.service";
 
 export class PaymentProviderService {
   constructor(
     private readonly paymentOrderRepository: PaymentOrderRepository,
+    private readonly paymentTransactionRepository: PaymentTransactionRepository,
+    private readonly paymentWebhookLogService: PaymentWebhookLogService,
   ) {}
 
   private resolveProvider(type: paymentProviderEnums): PaymentProvider {
@@ -32,6 +41,62 @@ export class PaymentProviderService {
 
   private resolveProviderFromWebhook(headers: any): PaymentProvider {
     return PaymentProviderFactory.getProviderFromWebhook(headers);
+  }
+
+  private isTerminalWebhookEvent(event: string): boolean {
+    return event === "payment.captured" || event === "order.paid";
+  }
+
+  private async finalizePaymentFromWebhook(webhookData: {
+    event: string;
+    providerOrderId: string | null;
+    paymentId: string | null;
+    amountInPaise: number | null;
+  }): Promise<void> {
+    if (!this.isTerminalWebhookEvent(webhookData.event)) {
+      return;
+    }
+
+    if (!webhookData.providerOrderId || !webhookData.paymentId) {
+      return;
+    }
+
+    const paymentOrder = await this.paymentOrderRepository.findByGatewayOrderId(
+      webhookData.providerOrderId,
+    );
+
+    if (!paymentOrder) {
+      throw new HttpError(404, "Payment order not found for webhook event");
+    }
+
+    const existingTxn =
+      await this.paymentTransactionRepository.findByGatewayPaymentId(
+        webhookData.paymentId,
+      );
+
+    if (!existingTxn) {
+      await this.paymentTransactionRepository.create({
+        refId: paymentOrder.refId,
+        userId: paymentOrder.userId,
+        orderId: paymentOrder._id,
+        amountInPaise: webhookData.amountInPaise ?? paymentOrder.amountInPaise,
+        paymentMode: paymentOrder.paymentMode,
+        provider: paymentOrder.provider,
+        providerPaymentId: webhookData.paymentId,
+        status: paymentTransactionStatusEnums.PAYMENT_SUCCESS,
+        paymentCompletedAt: new Date(),
+      });
+    }
+
+    await this.paymentOrderRepository.updateOne({
+      refId: paymentOrder.refId,
+      payload: {
+        providerOrderId: paymentOrder.providerOrderId,
+        orderDetails: paymentOrder.orderDetails,
+        orderStatus: paymentOrderStatusEnums.ORDER_COMPLETED,
+        paymentCompletedAt: new Date(),
+      },
+    });
   }
 
   async createOrder({
@@ -157,12 +222,53 @@ export class PaymentProviderService {
   }
 
   async processWebhook(req: any) {
+    let webhookData: any;
     try {
       const provider = this.resolveProviderFromWebhook(req.headers);
-      const webhookData = provider.processWebhook(req);
+      webhookData = await provider.processWebhook(req);
+
+      const isDuplicate = await this.paymentWebhookLogService.isDuplicateEvent(
+        webhookData.provider,
+        webhookData.eventId,
+      );
+
+      if (isDuplicate) {
+        return {
+          ...webhookData,
+          eventState: "ignored",
+        };
+      }
+
+      if (webhookData.eventState === "processed") {
+        await this.finalizePaymentFromWebhook(webhookData);
+      }
+
+      void enqueuePaymentWebhookLogJob({
+        jobName: paymentWebhookLogQueueJobs.UPSERT,
+        payload: webhookData,
+      }).catch((error: unknown) => {
+        console.error("enqueue webhook log failed", error);
+      });
+
       return webhookData;
     } catch (error: any) {
-      throw new HttpError(500, error?.message);
+      void enqueuePaymentWebhookLogJob({
+        jobName: paymentWebhookLogQueueJobs.MARK_FAILED,
+        payload: {
+          provider: webhookData?.provider || paymentProviderEnums.RAZORPAY,
+          eventId: webhookData?.eventId || null,
+          event: webhookData?.event || undefined,
+          rawPayload: webhookData?.rawPayload,
+          errorMessage: error?.message || "Webhook processing failed",
+        },
+      }).catch((enqueueError: unknown) => {
+        console.error("enqueue webhook failure log failed", enqueueError);
+      });
+
+      if (error instanceof HttpError) {
+        throw error;
+      }
+      throw new HttpError(500, error?.message || "Webhook processing failed");
     }
   }
 

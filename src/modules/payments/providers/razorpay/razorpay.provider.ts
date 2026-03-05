@@ -5,6 +5,8 @@ import {
   PaymentProvider,
   ProviderCreateOrderInput,
 } from "../../interfaces/payment-provider.interface";
+import { PaymentWebhookResult } from "../../interfaces/payment-webhook-result.interface";
+import { paymentProviderEnums } from "../../../../common/enums/payment-gateway.enum";
 import { razorpayWebhookEvents } from "./razorpay.webhook";
 import crypto from "crypto";
 
@@ -31,7 +33,7 @@ export class RazorpayProvider implements PaymentProvider {
     }
   }
 
-  async processWebhook(req: any): Promise<any> {
+  async processWebhook(req: any): Promise<PaymentWebhookResult> {
     // check secret
     const secret = env.paymentProvider.paymentProviderWebhookSecret;
     if (!secret) {
@@ -53,15 +55,48 @@ export class RazorpayProvider implements PaymentProvider {
       throw new HttpError(400, "Invalid Signature");
     }
 
+    const eventIdHeader = req.headers["x-razorpay-event-id"];
+    const eventId =
+      typeof eventIdHeader === "string"
+        ? eventIdHeader
+        : Array.isArray(eventIdHeader)
+          ? eventIdHeader[0]
+          : null;
+
     // extract event and payload
     const { event, payload } = JSON.parse(dataToSign.toString("utf-8"));
-    console.log(event, payload, "webhook-response-data");
+
     const handler = razorpayWebhookEvents[event];
     if (!handler) {
-      return null;
+      return {
+        provider: paymentProviderEnums.RAZORPAY,
+        event,
+        eventId,
+        eventState: "ignored",
+        refId: null,
+        providerOrderId: null,
+        paymentId: null,
+        status: null,
+        amountInPaise: null,
+        currency: null,
+        rawPayload: payload,
+      };
     }
-    // call event handler
-    return handler(payload);
+
+    const normalized = await handler(payload);
+    return {
+      provider: paymentProviderEnums.RAZORPAY,
+      event,
+      eventId,
+      eventState: normalized.eventState,
+      refId: normalized.refId,
+      providerOrderId: normalized.providerOrderId,
+      paymentId: normalized.paymentId,
+      status: normalized.status,
+      amountInPaise: normalized.amountInPaise,
+      currency: normalized.currency,
+      rawPayload: normalized.rawPayload,
+    };
   }
 
   async fetchPaymentStatus(payload: any): Promise<any> {

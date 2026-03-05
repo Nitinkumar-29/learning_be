@@ -4,7 +4,7 @@ import {
   parcelXOrderCancellationConsumer,
 } from "../parcelx/queues/order/order.consumer";
 import { parcelXWarehouseConsumer } from "../parcelx/queues/warehouse/warehouse.consumer";
-import { paymentLogConsumer } from "../payments/queues";
+import { paymentLogConsumer, paymentWebhookLogConsumer } from "../payments/queues";
 
 let workers: Worker[] = [];
 
@@ -18,6 +18,7 @@ export const initializeBullWorkers = (): Worker[] => {
     parcelXOrderCancellationConsumer(),
     parcelXWarehouseConsumer(),
     paymentLogConsumer(),
+    paymentWebhookLogConsumer(),
   ];
   return workers;
 };

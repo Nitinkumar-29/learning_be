@@ -1,3 +1,5 @@
+import { PaymentWebhookResult } from "./payment-webhook-result.interface";
+
 export interface ProviderCreateOrderInput {
   amountInPaise: number;
   receipt: string;
@@ -6,6 +8,6 @@ export interface ProviderCreateOrderInput {
 
 export interface PaymentProvider {
   createOrder(payload: ProviderCreateOrderInput): Promise<any>;
-  processWebhook(req:any): Promise<any>;
+  processWebhook(req: any): Promise<PaymentWebhookResult>;
   fetchPaymentStatus(payload: any): Promise<any>;
 }

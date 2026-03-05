@@ -1,21 +1,19 @@
-import { paymentEventEnums } from "../../../../../common/enums/payment-gateway.enum";
-import { PaymentCapturedHandler } from "../types/events.types";
+import { RazorpayWebhookEventResult } from "../types/events.types";
 
 export async function paymentCapturedHandlerEvent(
   payload: any,
-): Promise<PaymentCapturedHandler | null> {
-  console.log(payload, "payment captured event payload");
+): Promise<RazorpayWebhookEventResult> {
   const payment = payload?.payment?.entity;
-  if (!payment) {
-    return null;
-  }
+  const order = payload?.order?.entity;
 
   return {
-    providerOrderId: payment.order_id,
-    paymentId: payment.id,
-    amount: payment.amount,
-    currency: payment.currency,
-    status: paymentEventEnums.PAYMENT_SUCCESS,
+    eventState: payment ? "processed" : "ignored",
+    refId: order?.receipt || payment?.notes?.refId || null,
+    providerOrderId: payment?.order_id || order?.id || null,
+    paymentId: payment?.id || null,
+    status: payment?.status || order?.status || null,
+    amountInPaise: payment?.amount ?? order?.amount ?? null,
+    currency: payment?.currency || order?.currency || null,
     rawPayload: payload,
   };
 }
