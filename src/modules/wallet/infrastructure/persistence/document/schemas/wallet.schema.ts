@@ -12,19 +12,19 @@ const WalletSchema = new Schema(
       type: String,
       default: "INR",
     },
-    availableBalance: {
+    availableBalanceInPaise: {
       type: Number,
       default: 0,
     },
-    holdBalance: {
+    holdBalanceInPaise: {
       type: Number,
       default: 0,
     },
-    totalDebited: {
+    totalDebitedInPaise: {
       type: Number,
       default: 0,
     },
-    totalCredited: {
+    totalCreditedInPaise: {
       type: Number,
       default: 0,
     },

@@ -5,6 +5,7 @@ import { NodemailerProvider } from "../emails/providers/nodemailer.provider";
 import { EmailService } from "../emails/email.service";
 import { AuthMiddleware } from "../../common/middleware/auth.middleware";
 
+
 const emailProvider = new NodemailerProvider();
 const emailService = new EmailService(emailProvider);
 const authRepository = new AuthDocumentRepository();

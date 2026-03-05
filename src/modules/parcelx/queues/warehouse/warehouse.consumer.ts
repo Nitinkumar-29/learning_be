@@ -1,6 +1,6 @@
 import { Worker } from "bullmq";
 import { parcelXWarehouse } from "./warehouse.producer";
-import redisClient from "../../../../config/redis.config";
+import { createRedisConnection } from "../../../../config/redis.config";
 import {
   ParcelXWarehouseJobData,
   processParcelXWarehouseJob,
@@ -11,7 +11,7 @@ export const parcelXWarehouseConsumer = () => {
     parcelXWarehouse,
     processParcelXWarehouseJob,
     {
-      connection: redisClient,
+      connection: createRedisConnection(),
       concurrency: 5,
     },
   );

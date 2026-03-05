@@ -8,31 +8,28 @@ if (!redisUrl) {
   throw new HttpError(500, "Missing Redis URL in environment variables");
 }
 
-// create redis client instance
-const redisClient = new Redis(redisUrl, {
-  tls: redisUrl.startsWith("rediss://") ? {} : undefined, // enable TLS if using rediss://
-  connectTimeout: 5000, // 5 seconds connection timeout
-  lazyConnect: true, // delay connection until first command
-  enableReadyCheck: true, // check if Redis is ready before allowing commands
-  enableOfflineQueue: true, // queue commands while Redis is offline
-  maxRetriesPerRequest: null, // retry failed commands up to 3 times
-  reconnectOnError: (err) => {
-    console.error("Redis connection error:", err);
-    return false; // no reconnect on any error
-  },
-});
+export const createRedisConnection = (): Redis => {
+  const redisClient = new Redis(redisUrl, {
+    tls: redisUrl.startsWith("rediss://") ? {} : undefined,
+    connectTimeout: 5000,
+    lazyConnect: true,
+    enableReadyCheck: true,
+    enableOfflineQueue: true,
+    maxRetriesPerRequest: null,
+    retryStrategy: (times) => Math.min(times * 200, 2000),
+  });
 
-// handle connection events
-redisClient.on("connect", () => {
-  console.log("Connected to Redis Successfully!");
-});
+  redisClient.on("connect", () => {
+    console.log("Connected to Redis Successfully!");
+  });
 
-redisClient.on("error", (err) => {
-  console.error("Redis error:", err);
-});
+  redisClient.on("error", (err) => {
+    console.error("Redis error:", err);
+  });
 
-redisClient.on("end", () => {
-  console.warn("Redis connection closed");
-});
+  redisClient.on("end", () => {
+    console.warn("Redis connection closed");
+  });
 
-export default redisClient;
+  return redisClient;
+};

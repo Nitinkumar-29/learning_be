@@ -2,6 +2,7 @@ import {
   IPaymentOrder,
   PaymentOrderDto,
 } from "../document/types/payment-order.types";
+import { ClientSession } from "mongoose";
 
 export abstract class BaseRepository {
   abstract create({
@@ -17,8 +18,10 @@ export abstract class BaseRepository {
   abstract updateOne({
     refId,
     payload,
+    session,
   }: {
     refId: string;
     payload: any;
+    session?: ClientSession;
   }): Promise<IPaymentOrder | null>;
 }

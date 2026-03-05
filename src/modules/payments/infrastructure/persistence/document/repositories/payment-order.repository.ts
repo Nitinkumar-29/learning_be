@@ -1,7 +1,11 @@
-import { paymentOrderStatusEnums } from "../../../../../../common/enums/payment-gateway.enum";
+import {
+  paymentModeEnums,
+  paymentOrderStatusEnums,
+} from "../../../../../../common/enums/payment-gateway.enum";
 import { PaymentOrderRepository } from "../../abstraction/payment-order.repository";
 import { PaymentOrderModel } from "../schemas/order.schema";
 import { IPaymentOrder, PaymentOrderDto } from "../types/payment-order.types";
+import { ClientSession } from "mongoose";
 
 export class PaymentOrderDocumentRepository implements PaymentOrderRepository {
   async create({
@@ -22,28 +26,33 @@ export class PaymentOrderDocumentRepository implements PaymentOrderRepository {
     )) as unknown as IPaymentOrder;
   }
   async fetchAll(payload: any): Promise<any> {}
-  async findByGatewayOrderId(id: string): Promise<any> {
-    return await PaymentOrderModel.findOne({ providerOrderId: id });
+  async findByGatewayOrderId(id: string, session?: ClientSession): Promise<any> {
+    return await PaymentOrderModel.findOne({ providerOrderId: id }).session(
+      session ?? null,
+    );
   }
   async findById(payload: any): Promise<any> {}
   async findOne(payload: any): Promise<any> {}
   async updateOne({
     refId,
     payload,
+    session,
   }: {
     refId: string;
     payload: {
       providerOrderId: string | null;
       orderDetails: any;
+      paymentMode?: paymentModeEnums | null;
       orderStatus: paymentOrderStatusEnums;
       paymentCompletedAt?: Date | null;
     };
+    session?: ClientSession;
   }): Promise<IPaymentOrder | null> {
     // find order by refid for uniquenes and then update details
     return await PaymentOrderModel.findOneAndUpdate(
       { refId },
       { ...payload },
-      { returnDocument: "after" },
+      { returnDocument: "after", session },
     );
   }
 }

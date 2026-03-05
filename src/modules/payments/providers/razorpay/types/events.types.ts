@@ -3,6 +3,7 @@ export interface RazorpayWebhookEventResult {
   refId: string | null;
   providerOrderId: string | null;
   paymentId: string | null;
+  paymentMode: string | null;
   status: string | null;
   amountInPaise: number | null;
   currency: string | null;

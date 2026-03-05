@@ -16,12 +16,15 @@ export const enqueuePaymentLogJob = async (
   const refId = payload.refId;
   const operation = payload.operation;
   const stage = payload.stage;
+  const transactionId =
+    payload.transactionId != null ? String(payload.transactionId) : null;
 
-  // dedupe repeated submits for the same lifecycle stage
-  const jobId = `${refId}:${operation}:${stage}`;
+  // BullMQ custom jobId cannot contain ":".
+  const jobId = transactionId
+    ? `${refId}_${operation}_${stage}_${transactionId}`
+    : `${refId}_${operation}_${stage}`;
 
   await paymentLogQueue.add(jobName, data, { jobId });
 };
 
 export const paymentLogQueueJobs = paymentLogJobNames;
-

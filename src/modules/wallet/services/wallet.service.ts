@@ -11,6 +11,7 @@ import {
   transactionStatus,
   transactionType,
 } from "../../../common/enums/wallet-ledger.enum";
+import { ClientSession } from "mongoose";
 
 export class WalletService {
   constructor(
@@ -75,16 +76,16 @@ export class WalletService {
           throw new HttpError(404, "Wallet not found");
         }
 
-        if (wallet.availableBalance < amount) {
+        if (wallet.availableBalanceInPaise < amount) {
           throw new HttpError(400, "Insufficient balance");
         }
 
-        const beforeAvailable = wallet.availableBalance || 0;
-        const beforeHold = wallet.holdBalance || 0;
+        const beforeAvailable = wallet.availableBalanceInPaise || 0;
+        const beforeHold = wallet.holdBalanceInPaise || 0;
 
         const walletPayload = {
-          availableBalance: beforeAvailable - amount,
-          holdBalance: beforeHold + amount,
+          availableBalanceInPaise: beforeAvailable - amount,
+          holdBalanceInPaise: beforeHold + amount,
         };
 
         updatedWallet = await this.walletRepository.updateOne(
@@ -94,8 +95,8 @@ export class WalletService {
         );
 
         const afterAvailable =
-          updatedWallet?.availableBalance ?? beforeAvailable - amount;
-        const afterHold = updatedWallet?.holdBalance ?? beforeHold + amount;
+          updatedWallet?.availableBalanceInPaise ?? beforeAvailable - amount;
+        const afterHold = updatedWallet?.holdBalanceInPaise ?? beforeHold + amount;
         const payload = {
           walletId: wallet._id.toString(),
           userId,
@@ -141,12 +142,116 @@ export class WalletService {
     if (!wallet) {
       throw new HttpError(404, "Wallet not found");
     }
-    if (wallet.availableBalance < amount) {
+    if (wallet.availableBalanceInPaise < amount) {
       throw new HttpError(400, "Insufficient balance");
     }
 
     return await this.walletRepository.updateOne(wallet._id.toString(), {
-      availableBalance: wallet.availableBalance - amount,
+      availableBalanceInPaise: wallet.availableBalanceInPaise - amount,
     });
+  }
+
+  async creditFromPayment(
+    {
+      userId,
+      amountInPaise,
+      referenceId,
+      provider,
+      providerReferenceId,
+      idempotencyKey,
+      metadata,
+      createdBy,
+    }: {
+      userId: string;
+      amountInPaise: number;
+      referenceId: string;
+      provider: string;
+      providerReferenceId: string;
+      idempotencyKey: string;
+      metadata?: Record<string, unknown>;
+      createdBy?: string;
+    },
+    session?: ClientSession,
+  ): Promise<any> {
+    if (!Number.isFinite(amountInPaise) || amountInPaise <= 0) {
+      throw new HttpError(400, "Amount must be greater than 0");
+    }
+
+    const executeCredit = async (activeSession?: ClientSession) => {
+      const wallet = await this.walletRepository.findByUserId(userId, activeSession);
+      if (!wallet) {
+        throw new HttpError(404, "Wallet not found");
+      }
+
+      const beforeAvailable = wallet.availableBalanceInPaise || 0;
+      const beforeHold = wallet.holdBalanceInPaise || 0;
+      const afterAvailable = beforeAvailable + amountInPaise;
+      const totalCredited = (wallet.totalCreditedInPaise || 0) + amountInPaise;
+
+      const updatedWallet = await this.walletRepository.updateOne(
+        wallet._id.toString(),
+        {
+          availableBalanceInPaise: afterAvailable,
+          totalCreditedInPaise: totalCredited,
+        },
+        activeSession,
+      );
+
+      await this.walletLedgerService.createTransactionRecord(
+        {
+          walletId: wallet._id.toString(),
+          userId,
+          transactionType: transactionType.CREDIT,
+          transactionStatus: transactionStatus.COMPLETED,
+          amount: amountInPaise,
+          currency: wallet.currency || "INR",
+          balanceBeforeTransaction: beforeAvailable,
+          balanceAfterTransaction: afterAvailable,
+          holdBeforeTransaction: beforeHold,
+          holdAfterTransaction: beforeHold,
+          referenceId,
+          referenceType: referenceType.WALLET_TOPUP,
+          provider,
+          providerReferenceId,
+          idempotencyKey,
+          metadata,
+          description: "Wallet credited from payment webhook",
+          createdBy: createdBy || userId,
+        },
+        activeSession,
+      );
+
+      return updatedWallet;
+    };
+
+    if (session) {
+      return executeCredit(session);
+    }
+
+    const localSession = await mongoose.startSession();
+    try {
+      let result: any;
+      try {
+        await localSession.withTransaction(async () => {
+          result = await executeCredit(localSession);
+        });
+      } catch (error: any) {
+        const message = String(error?.message || "");
+        const transactionUnsupported =
+          message.includes(
+            "Transaction numbers are only allowed on a replica set member or mongos",
+          ) || message.includes("replica set");
+
+        if (!transactionUnsupported) {
+          throw error;
+        }
+
+        // Fallback for standalone MongoDB in local/dev.
+        result = await executeCredit();
+      }
+      return result;
+    } finally {
+      await localSession.endSession();
+    }
   }
 }

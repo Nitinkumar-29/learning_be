@@ -31,7 +31,7 @@ export class WalletDocumentRepository extends WalletRepository {
     session?: ClientSession,
   ): Promise<any> {
     return await WalletModel.findByIdAndUpdate(walletId, walletData, {
-      new: true,
+      returnDocument: "after",
       session,
     });
   }

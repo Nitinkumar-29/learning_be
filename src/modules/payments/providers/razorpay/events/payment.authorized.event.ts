@@ -10,10 +10,10 @@ export async function paymentAuthorizedHandlerEvent(
     refId: payment?.notes?.refId || null,
     providerOrderId: payment?.order_id || null,
     paymentId: payment?.id || null,
+    paymentMode: payment?.method || null,
     status: payment?.status || null,
     amountInPaise: payment?.amount ?? null,
     currency: payment?.currency || null,
     rawPayload: payload,
   };
 }
-

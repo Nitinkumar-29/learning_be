@@ -12,6 +12,7 @@ export class PaymentLogService {
   // create order log request
   async logCreateOrderRequest(data: unknown) {
     const parsed = createOrderRequestLogSchema.parse(data);
+    console.log(parsed,"parsed---data-log-request")
     return await this.paymentLogsRepository.upsertByRefAndOperation({
       refId: parsed.refId,
       operation: parsed.operation,

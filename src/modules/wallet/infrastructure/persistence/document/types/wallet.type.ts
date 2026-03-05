@@ -21,10 +21,10 @@ export interface IWallet {
   _id: Types.ObjectId;
   userId: Types.ObjectId;
   currency: "INR";
-  availableBalance: number;
-  holdBalance: number;
-  totalDebited: number;
-  totalCredited: number;
+  availableBalanceInPaise: number;
+  holdBalanceInPaise: number;
+  totalDebitedInPaise: number;
+  totalCreditedInPaise: number;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;

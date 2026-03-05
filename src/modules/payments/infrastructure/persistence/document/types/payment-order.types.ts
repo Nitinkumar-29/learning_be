@@ -15,9 +15,11 @@ export const paymentOrderSchema = z.object({
   provider: z.enum(Object.values(paymentProviderEnums), {
     message: "Invalid provider",
   }),
-  paymentMode: z.enum(Object.values(paymentModeEnums), {
-    message: "Invalid payment mode",
-  }),
+  paymentMode: z
+    .enum(Object.values(paymentModeEnums), {
+      message: "Invalid payment mode",
+    })
+    .optional(),
   promoCode: z.string().trim().optional(),
 });
 

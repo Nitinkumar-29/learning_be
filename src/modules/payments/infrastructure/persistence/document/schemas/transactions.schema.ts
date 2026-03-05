@@ -57,7 +57,6 @@ const TransactionSchema = new Schema(
   { timestamps: true },
 );
 
-TransactionSchema.index({ providerPaymentId: 1 });
 TransactionSchema.index({ orderId: 1, createdAt: -1 });
 
 export const TransactionModel = mongoose.model(

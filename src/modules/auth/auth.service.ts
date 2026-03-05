@@ -8,6 +8,7 @@ import { AuthRepository } from "./infrastructure/persistence/abstraction/auth.re
 import { EmailService } from "../emails/email.service";
 const bcrypt = require("bcryptjs");
 import crypto from "crypto";
+import { walletModule } from "../wallet/wallet.module";
 
 export class AuthService {
   constructor(
@@ -18,10 +19,18 @@ export class AuthService {
   async registerUser(registerDto: RegisterDto) {
     const hashPassword = await bcrypt.hash(registerDto.password, 10);
 
-    return this.authRepository.createUser({
+    const result = await this.authRepository.createUser({
       ...registerDto,
       password: hashPassword,
     });
+    // create a wallet
+    await walletModule.walletService.createWallet(
+      result._id as unknown as string,
+      {
+        currency: "INR",
+      },
+    );
+    return result;
   }
 
   async login(loginDto: LoginDto): Promise<{ userData: any; token: string }> {

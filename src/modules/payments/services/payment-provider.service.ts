@@ -5,6 +5,7 @@ import {
   paymentLogOperationEnums,
   paymentLogStageEnums,
   paymentLogStatusEnums,
+  paymentModeEnums,
   paymentOrderStatusEnums,
   paymentProviderEnums,
   paymentTransactionStatusEnums,
@@ -18,6 +19,9 @@ import {
   CreateOrderRequestLogDto,
   CreateOrderResponseLogDto,
 } from "../infrastructure/persistence/document/types/payment.logs.types";
+import mongoose from "mongoose";
+import { ClientSession } from "mongoose";
+import { walletModule } from "../../wallet/wallet.module";
 import {
   enqueuePaymentLogJob,
   paymentLogQueueJobs,
@@ -47,10 +51,28 @@ export class PaymentProviderService {
     return event === "payment.captured" || event === "order.paid";
   }
 
+  private mapProviderPaymentMode(
+    mode: string | null | undefined,
+  ): paymentModeEnums {
+    if (!mode) {
+      return paymentModeEnums.OTHER;
+    }
+
+    const normalized = String(mode).toLowerCase().trim();
+    if (normalized === "upi") {
+      return paymentModeEnums.UPI;
+    }
+    if (normalized === "netbanking" || normalized === "internet_banking") {
+      return paymentModeEnums.INTERNET_BANKING;
+    }
+    return paymentModeEnums.OTHER;
+  }
+
   private async finalizePaymentFromWebhook(webhookData: {
     event: string;
     providerOrderId: string | null;
     paymentId: string | null;
+    paymentMode: string | null;
     amountInPaise: number | null;
   }): Promise<void> {
     if (!this.isTerminalWebhookEvent(webhookData.event)) {
@@ -61,42 +83,149 @@ export class PaymentProviderService {
       return;
     }
 
-    const paymentOrder = await this.paymentOrderRepository.findByGatewayOrderId(
-      webhookData.providerOrderId,
-    );
+    const applyFinalization = async (
+      session?: ClientSession,
+    ): Promise<{
+      paymentOrder: any;
+      transactionId: any;
+    }> => {
+      const paymentOrder =
+        await this.paymentOrderRepository.findByGatewayOrderId(
+          webhookData.providerOrderId!,
+          session,
+        );
 
-    if (!paymentOrder) {
-      throw new HttpError(404, "Payment order not found for webhook event");
+      if (!paymentOrder) {
+        throw new HttpError(404, "Payment order not found for webhook event");
+      }
+
+      const existingTxn =
+        await this.paymentTransactionRepository.findByGatewayPaymentId(
+          webhookData.paymentId!,
+          session,
+        );
+
+      const completionTime = new Date();
+      let finalTxn = existingTxn;
+      const mappedPaymentMode = this.mapProviderPaymentMode(
+        webhookData.paymentMode,
+      );
+      if (!finalTxn) {
+        finalTxn = await this.paymentTransactionRepository.create(
+          {
+            refId: paymentOrder.refId,
+            userId: paymentOrder.userId,
+            orderId: paymentOrder._id,
+            amountInPaise:
+              webhookData.amountInPaise ?? paymentOrder.amountInPaise,
+            paymentMode: mappedPaymentMode,
+            provider: paymentOrder.provider,
+            providerPaymentId: webhookData.paymentId,
+            status: paymentTransactionStatusEnums.PAYMENT_SUCCESS,
+            paymentCompletedAt: completionTime,
+          },
+          session,
+        );
+
+        await walletModule.walletService.creditFromPayment(
+          {
+            userId: paymentOrder.userId.toString(),
+            amountInPaise:
+              webhookData.amountInPaise ?? paymentOrder.amountInPaise,
+            referenceId: paymentOrder.refId,
+            provider: paymentOrder.provider,
+            providerReferenceId: webhookData.paymentId!,
+            idempotencyKey: `wallet-credit-${webhookData.paymentId}`,
+            metadata: {
+              orderId: paymentOrder._id.toString(),
+              transactionId: finalTxn._id.toString(),
+              providerOrderId: paymentOrder.providerOrderId,
+            },
+            createdBy: paymentOrder.userId.toString(),
+          },
+          session,
+        );
+      }
+
+      await this.paymentOrderRepository.updateOne({
+        refId: paymentOrder.refId,
+        payload: {
+          providerOrderId: paymentOrder.providerOrderId,
+          orderDetails: paymentOrder.orderDetails,
+          paymentMode: mappedPaymentMode,
+          orderStatus: paymentOrderStatusEnums.ORDER_COMPLETED,
+          paymentCompletedAt: completionTime,
+        },
+        session,
+      });
+
+      return {
+        paymentOrder,
+        transactionId: finalTxn?._id || null,
+      };
+    };
+
+    const session = await mongoose.startSession();
+    let finalizationResult: { paymentOrder: any; transactionId: any } | null =
+      null;
+    try {
+      try {
+        await session.withTransaction(async () => {
+          finalizationResult = await applyFinalization(session);
+        });
+      } catch (error: any) {
+        const message = String(error?.message || "");
+        const transactionUnsupported =
+          message.includes(
+            "Transaction numbers are only allowed on a replica set member or mongos",
+          ) || message.includes("replica set");
+
+        if (!transactionUnsupported) {
+          throw error;
+        }
+
+        // Fallback for standalone MongoDB in local/dev.
+        finalizationResult = await applyFinalization();
+      }
+    } finally {
+      await session.endSession();
     }
 
-    const existingTxn =
-      await this.paymentTransactionRepository.findByGatewayPaymentId(
-        webhookData.paymentId,
-      );
+    if (finalizationResult?.paymentOrder) {
+      const transactionId =
+        finalizationResult.transactionId?.toString?.() ??
+        finalizationResult.transactionId ??
+        null;
 
-    if (!existingTxn) {
-      await this.paymentTransactionRepository.create({
-        refId: paymentOrder.refId,
-        userId: paymentOrder.userId,
-        orderId: paymentOrder._id,
-        amountInPaise: webhookData.amountInPaise ?? paymentOrder.amountInPaise,
-        paymentMode: paymentOrder.paymentMode,
-        provider: paymentOrder.provider,
-        providerPaymentId: webhookData.paymentId,
-        status: paymentTransactionStatusEnums.PAYMENT_SUCCESS,
-        paymentCompletedAt: new Date(),
+      const logOrderResponsePayload: CreateOrderResponseLogDto = {
+        refId: finalizationResult.paymentOrder.refId,
+        entityType: paymentEntityTypeEnums.ORDER,
+        event: paymentEventEnums.ORDER_CREATED,
+        operation: paymentLogOperationEnums.CREATE_ORDER,
+        provider: finalizationResult.paymentOrder.provider,
+        providerOrderId:
+          finalizationResult.paymentOrder.providerOrderId || undefined,
+        responsePayload: {
+          providerOrderId:
+            finalizationResult.paymentOrder.providerOrderId || "NA",
+          raw: finalizationResult.paymentOrder.orderDetails || {},
+        },
+        stage: paymentLogStageEnums.RESPONSE,
+        status: paymentLogStatusEnums.SUCCESS,
+        orderId: finalizationResult.paymentOrder._id,
+        transactionId,
+      };
+
+      void enqueuePaymentLogJob({
+        jobName: paymentLogQueueJobs.CREATE_ORDER_RESPONSE,
+        payload: logOrderResponsePayload,
+      }).catch((error: unknown) => {
+        console.error(
+          "enqueue order response log with transactionId failed",
+          error,
+        );
       });
     }
-
-    await this.paymentOrderRepository.updateOne({
-      refId: paymentOrder.refId,
-      payload: {
-        providerOrderId: paymentOrder.providerOrderId,
-        orderDetails: paymentOrder.orderDetails,
-        orderStatus: paymentOrderStatusEnums.ORDER_COMPLETED,
-        paymentCompletedAt: new Date(),
-      },
-    });
   }
 
   async createOrder({
@@ -106,6 +235,8 @@ export class PaymentProviderService {
     paymentOrder: PaymentOrderDto;
     userId: string;
   }) {
+    // before creating order check wallet is available or not as we are only allowing payments for wallet credit for now
+    await walletModule.walletService.getWallet(userId);
     const paymentOrderCreationResult = await this.paymentOrderRepository.create(
       {
         paymentOrder,

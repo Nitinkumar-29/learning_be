@@ -29,7 +29,7 @@ const PaymentOrderSchema = new Schema(
     paymentMode: {
       type: String,
       required: false,
-      default: paymentModeEnums.UPI,
+      default: null,
       enum: Object.values(paymentModeEnums),
     },
     orderStatus: {

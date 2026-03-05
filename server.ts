@@ -9,7 +9,7 @@ import { requestLogger } from "./src/common/middleware/requestLogger";
 import { env } from "./src/config/env";
 import { walletRoutes } from "./src/routes/wallet.route";
 import { orderRoutes } from "./src/routes/order.route";
-import redisClient from "./src/config/redis.config";
+import { createRedisConnection } from "./src/config/redis.config";
 import { queuesRoutes } from "./src/routes/queues.route";
 import { warehouseRoutes } from "./src/routes/warehouse.route";
 import { paymentRoutes } from "./src/routes/payments.route";
@@ -18,6 +18,7 @@ const app = express();
 
 const startServer = async () => {
   await connectToMongoDB();
+  const redisClient = createRedisConnection();
   await redisClient.ping();
 
   app.use(express.json());

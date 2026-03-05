@@ -1,5 +1,5 @@
 import { Job, UnrecoverableError, Worker } from "bullmq";
-import redisClient from "../../../../config/redis.config";
+import { createRedisConnection } from "../../../../config/redis.config";
 import {
   parcelXOrder,
   parcelXOrderCancellation,
@@ -57,7 +57,7 @@ export const parcelXOrderCancellationConsumer = () => {
     parcelXOrderCancellation,
     parcelXOrderCancellationJob,
     {
-      connection: redisClient,
+      connection: createRedisConnection(),
       concurrency: 5,
     },
   );
@@ -78,7 +78,7 @@ export const parcelXOrderConsumer = () => {
     parcelXOrder,
     processParcelXOrderJob,
     {
-      connection: redisClient,
+      connection: createRedisConnection(),
       concurrency: 5,
     },
   );
