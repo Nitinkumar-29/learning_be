@@ -6,6 +6,6 @@ export interface ProviderCreateOrderInput {
 
 export interface PaymentProvider {
   createOrder(payload: ProviderCreateOrderInput): Promise<any>;
-  verifyWebhook(req:any): Promise<any>;
+  processWebhook(req:any): Promise<any>;
   fetchPaymentStatus(payload: any): Promise<any>;
 }

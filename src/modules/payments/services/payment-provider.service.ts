@@ -159,7 +159,7 @@ export class PaymentProviderService {
   async processWebhook(req: any) {
     try {
       const provider = this.resolveProviderFromWebhook(req.headers);
-      const webhookData = provider.verifyWebhook(req);
+      const webhookData = provider.processWebhook(req);
       return webhookData;
     } catch (error: any) {
       throw new HttpError(500, error?.message);

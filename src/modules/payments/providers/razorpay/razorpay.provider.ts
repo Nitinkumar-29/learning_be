@@ -6,7 +6,7 @@ import {
   ProviderCreateOrderInput,
 } from "../../interfaces/payment-provider.interface";
 import { razorpayWebhookEvents } from "./razorpay.webhook";
-const crypto = require("crypto");
+import crypto from "crypto";
 
 export class RazorpayProvider implements PaymentProvider {
   private razorpayInstance = razorpay;
@@ -31,7 +31,7 @@ export class RazorpayProvider implements PaymentProvider {
     }
   }
 
-  async verifyWebhook(req: any): Promise<any> {
+  async processWebhook(req: any): Promise<any> {
     // check secret
     const secret = env.paymentProvider.paymentProviderWebhookSecret;
     if (!secret) {
