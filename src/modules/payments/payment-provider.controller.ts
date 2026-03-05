@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { PaymentProviderService } from "./services/payment-provider.service";
 import { PaymentOrderDto } from "./infrastructure/persistence/document/types/payment-order.types";
+import { VerifyPaymentRequestDto } from "./types/request-valiation.types";
 
 export class PaymentGatewayController {
   constructor(private readonly paymentService: PaymentProviderService) {
@@ -53,6 +54,13 @@ export class PaymentGatewayController {
     next: NextFunction,
   ): Promise<any> {
     try {
+      const payload: VerifyPaymentRequestDto = req.body;
+      const result = await this.paymentService.verifyPayment(payload);
+      res.status(200).json({
+        message: "Payment completed successfully!",
+        success: true,
+        data: result,
+      });
       // verify-payment hit service
     } catch (error) {
       next(error);

@@ -31,6 +31,7 @@ import {
   paymentWebhookLogQueueJobs,
 } from "../queues/producers/payment-webhook-log.producer";
 import { PaymentWebhookLogService } from "./payment-webhook-log.service";
+import { VerifyPaymentRequestDto } from "../types/request-valiation.types";
 
 export class PaymentProviderService {
   constructor(
@@ -403,7 +404,37 @@ export class PaymentProviderService {
     }
   }
 
-  async verifyPayment(payload: any): Promise<any> {
-    return this.resolveProvider(payload.paymentProvider);
+  async verifyPayment(payload: VerifyPaymentRequestDto): Promise<any> {
+    // if paymentid provided then check transactions first
+    const transaction =
+      await this.paymentTransactionRepository.findByGatewayPaymentId(
+        payload.paymentId,
+      );
+    if (!transaction && payload.orderId) {
+      // check order exist or not wiht orderId
+      const order = await this.paymentOrderRepository.findByGatewayOrderId(
+        payload.orderId,
+      );
+      if (!order) {
+        throw new HttpError(
+          404,
+          "No transation or payment order record found, please contact support!",
+        );
+      }
+      // if found theck for provider
+      const provider = order.provider;
+      // validate signature first
+      const resolvedSignatureVerification =
+        this.resolveProvider(provider).verifyCheckoutSignature(payload);
+      if (!resolvedSignatureVerification) {
+        throw new HttpError(400, "Invalid provider signature");
+      }
+
+      const result =
+        await this.resolveProvider(provider).fetchPaymentStatus(payload);
+      return result
+    }
+    return transaction;
+    // return this.resolveProvider(payload.paymentProvider);
   }
 }

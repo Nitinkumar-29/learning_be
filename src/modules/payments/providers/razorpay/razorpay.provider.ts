@@ -102,6 +102,36 @@ export class RazorpayProvider implements PaymentProvider {
   }
 
   async fetchPaymentStatus(payload: any): Promise<any> {
-    return;
+    const paymentId = payload.paymentId;
+    try {
+      const status = await razorpay.payments.fetch(paymentId);
+      console.log(status);
+      return status;
+    } catch (error) {
+      throw new HttpError(404, `payment not found for paymentId ${paymentId}`);
+    }
+  }
+
+  // implement checkout signatre verifyication method
+  verifyCheckoutSignature(params: {
+    orderId: string;
+    paymentId: string;
+    signature: string;
+    keySecret: string;
+  }): boolean {
+    const keySecret = env.paymentProvider.paymentProviderKeySecret;
+    if (!keySecret) {
+      throw new HttpError(400, "provider signature verification failed");
+    }
+    const { orderId, paymentId, signature } = params;
+    console.log(orderId, paymentId, signature, "payload");
+
+    const expectedSignature = crypto
+      .createHmac("sha256", keySecret)
+      .update(orderId + "|" + paymentId)
+      .digest("hex");
+    console.log(expectedSignature,"expected")
+    console.log(signature,"request")
+    return expectedSignature === signature;
   }
 }
