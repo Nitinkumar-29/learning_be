@@ -69,7 +69,28 @@ export class AuthDocumentRepository extends AuthRepository {
       .lean();
   }
 
-  async totalUsers(): Promise<number> {
-    return await User.countDocuments();
+  async totalUsers({
+    search,
+    startDate,
+    endDate,
+  }: {
+    search?: string;
+    startDate?: Date;
+    endDate?: Date;
+  }): Promise<number> {
+    const filterQueryBuilder: any = {};
+    // text search
+    if (search?.trim()) {
+      search.trim();
+      const re = new RegExp(search, "i"); // case-insensitive
+
+      filterQueryBuilder.$or = [
+        { name: re },
+        { companyName: re },
+        { email: re },
+        { mobileNumber: re },
+      ];
+    }
+    return await User.countDocuments(filterQueryBuilder);
   }
 }

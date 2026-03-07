@@ -13,11 +13,13 @@ import { createRedisConnection } from "./src/config/redis.config";
 import { queuesRoutes } from "./src/routes/queues.route";
 import { warehouseRoutes } from "./src/routes/warehouse.route";
 import { paymentRoutes } from "./src/routes/payments.route";
+import { initializeIntegrationEventListeners } from "./src/modules/integration-events/integration-events.module";
 
 const app = express();
 
 const startServer = async () => {
   await connectToMongoDB();
+  initializeIntegrationEventListeners();
   const redisClient = createRedisConnection();
   await redisClient.ping();
 

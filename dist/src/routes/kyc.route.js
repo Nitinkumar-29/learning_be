@@ -1,0 +1,22 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.kycRoutes = void 0;
+const express_1 = __importDefault(require("express"));
+const kyc_module_1 = require("../modules/kyc/kyc.module");
+const auth_module_1 = require("../modules/auth/auth.module");
+const auth_enum_1 = require("../common/enums/auth.enum");
+const validator_1 = require("../common/validator");
+const register_kyc_1 = require("../modules/kyc/infrastructure/persistence/document/types/register.kyc");
+const router = express_1.default.Router();
+const { kycController } = kyc_module_1.kycModule;
+const { authMiddleware } = auth_module_1.authModule;
+router.post("/register", authMiddleware.protect, (0, validator_1.validate)(register_kyc_1.registerKycSchema), kycController.registerKycDetails);
+router.post("/registerBankDetails", authMiddleware.protect, (0, validator_1.validate)(register_kyc_1.registerBankKycSchema), kycController.registerBankKycDetails);
+router.get("/fetchDetails", authMiddleware.protect, kycController.fetchRegisteredKycDetails);
+router.get("/fetchBankDetails", authMiddleware.protect, kycController.fetchRegisteredBankKycDetails);
+router.get("/admin/listRegisteredKycs", authMiddleware.authorize(auth_enum_1.userRole.ADMIN), kycController.listRegisteredKycs);
+router.delete("/admin/deleteKyc/:id", authMiddleware.authorize(auth_enum_1.userRole.ADMIN), kycController.deleteKycDetails);
+exports.kycRoutes = router;

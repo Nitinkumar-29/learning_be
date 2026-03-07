@@ -105,7 +105,7 @@ export class RazorpayProvider implements PaymentProvider {
     const paymentId = payload.paymentId;
     try {
       const status = await razorpay.payments.fetch(paymentId);
-      console.log(status);
+      console.log(status,"fetch-payment-status");
       return status;
     } catch (error) {
       throw new HttpError(404, `payment not found for paymentId ${paymentId}`);

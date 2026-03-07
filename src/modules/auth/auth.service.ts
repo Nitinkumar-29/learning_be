@@ -8,7 +8,8 @@ import { AuthRepository } from "./infrastructure/persistence/abstraction/auth.re
 import { EmailService } from "../emails/email.service";
 const bcrypt = require("bcryptjs");
 import crypto from "crypto";
-import { walletModule } from "../wallet/wallet.module";
+import { eventBus } from "../integration-events/event-bus";
+import { authEvents } from "../integration-events/events/auth.events";
 
 export class AuthService {
   constructor(
@@ -19,18 +20,17 @@ export class AuthService {
   async registerUser(registerDto: RegisterDto) {
     const hashPassword = await bcrypt.hash(registerDto.password, 10);
 
-    const result = await this.authRepository.createUser({
+    const user = await this.authRepository.createUser({
       ...registerDto,
       password: hashPassword,
     });
-    // create a wallet
-    await walletModule.walletService.createWallet(
-      result._id as unknown as string,
-      {
-        currency: "INR",
-      },
-    );
-    return result;
+    eventBus.emit(authEvents.USER_REGISTERED, {
+      userId: user._id.toString(),
+      email: user.email,
+      role: user.role,
+      occurredAt: new Date(),
+    });
+    return user;
   }
 
   async login(loginDto: LoginDto): Promise<{ userData: any; token: string }> {
@@ -187,7 +187,11 @@ export class AuthService {
     });
     let totalUsers;
 
-    totalUsers = await this.authRepository.totalUsers();
+    totalUsers = await this.authRepository.totalUsers({
+      search: query.search as unknown as string,
+      startDate: query.startDate as unknown as Date,
+      endDate: query.endDate as unknown as Date,
+    });
 
     return {
       users,

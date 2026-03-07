@@ -14,5 +14,13 @@ export abstract class AuthRepository {
   ): Promise<IUser | null>;
   abstract findOne(filter: any): Promise<IUser | null>;
   abstract findMany(filter: any): Promise<IUser[]>;
-  abstract totalUsers(): Promise<number>;
+  abstract totalUsers({
+    search,
+    startDate,
+    endDate,
+  }: {
+    search?: string;
+    startDate?: Date;
+    endDate?: Date;
+  }): Promise<number>;
 }

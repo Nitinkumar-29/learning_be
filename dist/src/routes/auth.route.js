@@ -1,0 +1,22 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.authRoutes = void 0;
+const express_1 = __importDefault(require("express"));
+const validator_1 = require("../common/validator");
+const auth_types_1 = require("../modules/auth/infrastructure/persistence/document/types/auth.types");
+const auth_module_1 = require("../modules/auth/auth.module");
+const auth_enum_1 = require("../common/enums/auth.enum");
+const router = express_1.default.Router();
+const { authController, authMiddleware } = auth_module_1.authModule;
+router.post("/register", (0, validator_1.validate)(auth_types_1.registerSchema), authController.registerUser);
+router.post("/login", (0, validator_1.validate)(auth_types_1.loginSchema), authController.login);
+router.get("/profile", authMiddleware.protect, authController.getProfile);
+router.post("/change-password", authMiddleware.protect, authController.changePassword);
+router.post("/forgot-password", authController.forgotPassword);
+router.post("/reset-password", authController.resetPassword);
+router.post("/logout", authMiddleware.protect, authController.logout);
+router.get("/fetchUsers", authMiddleware.authorize(auth_enum_1.userRole.ADMIN), authController.fetchUsers);
+exports.authRoutes = router;
